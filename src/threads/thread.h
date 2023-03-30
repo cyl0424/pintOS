@@ -147,4 +147,7 @@ void thread_wakeup(int64_t ticks);
 void save_mintick(int64_t ticks);
 int64_t return_mintick(void);
 
+bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED);
+void check_max_priority(void);
+
 #endif /* threads/thread.h */
