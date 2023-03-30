@@ -1,8 +1,8 @@
 # pintOS Project
 
-## I/O
+## Project 1
 <details>
-    <summary> Project 1 </summary>
+    <summary> details... </summary>
 <br>
     ### 1. Alarm Clock
     
