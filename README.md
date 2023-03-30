@@ -81,7 +81,7 @@ int64_t return_mintick(void);
 static struct list sleep_list;
 static int64_t next_tick_to_wakeup;
 ```
-> Define the sleep queue and next_tick_to_wakeup
+> Define the sleep_list and next_tick_to_wakeup
 
 <br>
 
