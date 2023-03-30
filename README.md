@@ -4,6 +4,6 @@
 <details>
     <summary> details... </summary>
 <br>
-    ### 1. Alarm Clock
+    1. Alarm Clock
     
 </details>
