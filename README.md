@@ -3,54 +3,85 @@
 
 <br>
 
-## 1) Priority Scheduling
-### - Files to modify
+## 1. Priority Scheduling
+### 1) Files to modify
 - threads/thread.*
 
 <br>
 <br>
 
-### - To-do
-- **Modify thread structure** (threads/thread.h) <br>
-     : Donation을 관리하기 위한 새로운 변수와 lock, list, list_elem을 추가해라.
+### 2) To-do
+- **Type** (threads/thread.h) <br>
+     : desc
      
  
 <br>
 <br>
 
-### - Project Description
+### 3) Project Description
+
+#### - thread.h
+
+``` C
+struct thread {
+
+  ...
+
+  
+  
+  ...
+
+}
+```
+> Add 
 
 <br>
 
-## 2) Priority Synchronization
-### - Files to modify
+<br>
+
+## 2. Priority Synchronization
+### 1) Files to modify
 - threads/thread.*
 - threads/synch.*
 
 <br>
 <br>
 
-### - To-do
-- **Modify thread structure** (threads/thread.h) <br>
-     : Donation을 관리하기 위한 새로운 변수와 lock, list, list_elem을 추가해라.
+### 2) To-do
+- **Type** (threads/thread.h) <br>
+     : desc
 
 
 <br>
 <br>
 
-### - Project Description
+### 3) Project Description
+``` C
+struct thread {
+
+  ...
+
+  
+  
+  ...
+
+}
+```
+> Add 
 
 <br>
 
-## 3) Priority Donation
-### - Files to modify
+<br>
+
+## 3. Priority Donation
+### 1) Files to modify
 - threads/thread.*
 - threads/synch.*
 
 <br>
 <br>
 
-### - To-do
+### 2) To-do
 - **Modify thread structure** (threads/thread.h) <br>
      : Donation을 관리하기 위한 새로운 변수와 lock, list, list_elem을 추가해라.
      
@@ -66,4 +97,18 @@
 <br>
 <br>
 
-### - Project Description
+### 3) Project Description
+``` C
+struct thread {
+
+  ...
+
+  
+  
+  ...
+
+}
+```
+> Add 
+
+<br>
