@@ -126,14 +126,14 @@ thread_sleep(int64_t ticks){
 ```
 > Create a function thread_sleep(). <br>
 > It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
-> <span style="color:red"> interrupts turn off </span> <br>
+> ** interrupts turn off ** <br>
 > Because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
 > Set a local ticks 'wakeup_tick' of a current thread, which is going to sleep, to be a parameter of thread_sleep(). <br>
 > Call save_minticks() <- newly created function. Will be described below. <br>
 > Call thread_block() function to insert thread to the sleep queue <br>
 > Call list_push_back() to put the current thread into the sleep queue. <br>
 > Call thread_block() to set the status of the current thread to be 'THREAD_BLOCKED' <br>
-> <span style="color:red"> interrupts turn on </span>
+> ** interrupts turn on **
 
 <br>
 
