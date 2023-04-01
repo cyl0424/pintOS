@@ -61,8 +61,7 @@ struct thread {
 
 }
 ```
-> Modify thread structure
-> Add int64_t type variable named 'wakeup_tick', value of (its timer ticks + system ticks)
+> Add int64_t type variable named 'wakeup_tick', which will save the value of (its timer ticks + system ticks)
 
 <br>
 
@@ -72,7 +71,7 @@ void thread_wakeup(int64_t ticks);
 void save_mintick(int64_t ticks);
 int64_t return_mintick(void);
 ```
-> Declare the function that is creadted in 'thread.c'
+> Declare the functions we newly creadted in 'thread.c'
 
 <br>
 
@@ -82,7 +81,9 @@ int64_t return_mintick(void);
 static struct list sleep_list;
 static int64_t next_tick_to_wakeup;
 ```
-> Define the sleep_list and next_tick_to_wakeup
+> Define the sleep_list and next_tick_to_wakeup <br>
+> sleep_list is a queue to store blocked threads until its time to wake them up <br>
+> next_tick_to_wakeup is 
 
 <br>
 
@@ -98,7 +99,8 @@ thread_init (void) {
   ...
 }
 ```
-> Initialize the sleep queue and next_tick_to_wakeup
+> Initialize the sleep queue using list_init <br>
+> Initialize next_tick_to_wakeup to be INT64_MAX so that whenever there is any other ticks smaller than current, it can be updated to the smaller one.
 
 <br>
 
@@ -122,7 +124,16 @@ thread_sleep(int64_t ticks){
   intr_set_level(old_level);
 }
 ```
-> Call thread_block() function to insert thread to the sleep queue
+> Create a function thread_sleep(). <br>
+> It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
+> <span style="color:blue"> interrupts turn off </span> <br>
+> Because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
+> Set a local ticks 'wakeup_tick' of a current thread, which is going to sleep, to be a parameter of thread_sleep(). <br>
+> Call save_minticks() <- newly created function. Will be described below. <br>
+> Call thread_block() function to insert thread to the sleep queue <br>
+> Call list_push_back() to put the current thread into the sleep queue. <br>
+> Call thread_block() to set the status of the current thread to be 'THREAD_BLOCKED' <br>
+> <span style="color:blue"> interrupts turn on </span> <br>
 
 <br>
 
