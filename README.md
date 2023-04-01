@@ -128,7 +128,7 @@ thread_sleep(int64_t ticks){
 > It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
 > ** interrupts turn off ** <br>
 > Because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
-> Set a local ticks 'wakeup_tick' of a current thread, which is going to sleep, to be a parameter of thread_sleep(). <br>
+> Set a local ticks 'wakeup_tick' of a current thread, which is going to sleep, to be a parameter of thread_sleep(), which is (timer ticks+system tick). <br>
 > Call save_minticks() <- newly created function. Will be described below. <br>
 > Call thread_block() function to insert thread to the sleep queue <br>
 > Call list_push_back() to put the current thread into the sleep queue. <br>
@@ -162,7 +162,15 @@ thread_wakeup(int64_t ticks){
   intr_set_level(old_level);
 }
 ```
-> while 문을 이용해 sleep_list를 순회하며 깨워야할 thread를 찾아 thread_unblock()을 호출함
+> Declare variable *e, and initiate it to be the first element of the sleep list. <br>
+> Declare variable *t. <br>
+> **Turn interrupt off.** <br>
+> Set the value of next_tick_to_wakeup to be INT64_MAX, so that whenever there is any smaller ticks, it can be updated. <br>
+> Using while clause, traversal sleep list from the first to end element to find a thread to wake up and call thread_unblock() <br>
+>    Set variable t to be the tread that is being currently traversaled. <br>
+>    If wakeup_tick(which is the ticks t has to wakeup) is equal or smaller than the parameter ticks(which is current system ticks), unblock t by calling thread_unblock(). <br>
+>    If it is not, move to the next sleeping thread and update minimum ticks by calling save_mintick(ticks) <- newly created function. described below. <br>
+> **Turn interrupts on.**
 
 <br>
 
