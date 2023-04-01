@@ -62,6 +62,7 @@ struct thread {
 }
 ```
 > Modify thread structure
+> Add int64_t type variable named 'wakeup_tick', value of (its timer ticks + system ticks)
 
 <br>
 
