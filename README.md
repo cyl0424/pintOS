@@ -61,7 +61,7 @@ struct thread {
 
 }
 ```
-> Add int64_t type variable named 'wakeup_tick', which will save the value of (its timer ticks + system ticks)
+> - Add int64_t type variable named 'wakeup_tick', which will save the value of (its timer ticks + system ticks)
 
 <br>
 
@@ -71,7 +71,7 @@ void thread_wakeup(int64_t ticks);
 void save_mintick(int64_t ticks);
 int64_t return_mintick(void);
 ```
-> Declare the functions we newly creadted in 'thread.c'
+> - Declare the functions we newly creadted in 'thread.c'
 
 <br>
 
@@ -81,9 +81,9 @@ int64_t return_mintick(void);
 static struct list sleep_list;
 static int64_t next_tick_to_wakeup;
 ```
-> Define the sleep_list and next_tick_to_wakeup <br>
-> sleep_list is a queue to store blocked threads until its time to wake them up <br>
-> next_tick_to_wakeup is 
+> - Define the sleep_list and next_tick_to_wakeup <br>
+> - sleep_list is a queue to store blocked threads until its time to wake them up <br>
+> - next_tick_to_wakeup is 
 
 <br>
 
@@ -99,8 +99,8 @@ thread_init (void) {
   ...
 }
 ```
-> Initialize the sleep queue using list_init <br>
-> Initialize next_tick_to_wakeup to be INT64_MAX so that whenever there is any other ticks smaller than current, it can be updated to the smaller one.
+> - Initialize the sleep queue using list_init <br>
+> - Initialize next_tick_to_wakeup to be INT64_MAX so that whenever there is any other ticks smaller than current, it can be updated to the smaller one.
 
 <br>
 
@@ -124,16 +124,16 @@ thread_sleep(int64_t ticks){
   intr_set_level(old_level);
 }
 ```
-> Create a function thread_sleep(). <br>
-> It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
-> ** interrupts turn off ** <br>
-> Because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
-> Set a local ticks 'wakeup_tick' of a current thread, which is going to sleep, to be a parameter of thread_sleep(), which is (timer ticks+system tick). <br>
-> Call save_minticks() <- newly created function. Will be described below. <br>
-> Call thread_block() function to insert thread to the sleep queue <br>
-> Call list_push_back() to put the current thread into the sleep queue. <br>
-> Call thread_block() to set the status of the current thread to be 'THREAD_BLOCKED' <br>
-> ** interrupts turn on **
+> - Create a function thread_sleep(). <br>
+> - It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
+> - **interrupts turn off** <br>
+> - Because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
+> - Set a local ticks 'wakeup_tick' of a current thread, which is going to sleep, to be a parameter of thread_sleep(), which is (timer ticks+system tick). <br>
+> - Call save_minticks() <- newly created function. Will be described below. <br>
+> - Call thread_block() function to insert thread to the sleep queue <br>
+> - Call list_push_back() to put the current thread into the sleep queue. <br>
+> - Call thread_block() to set the status of the current thread to be 'THREAD_BLOCKED' <br>
+> - **interrupts turn on**
 
 <br>
 
@@ -162,15 +162,15 @@ thread_wakeup(int64_t ticks){
   intr_set_level(old_level);
 }
 ```
-> Declare variable *e, and initiate it to be the first element of the sleep list. <br>
-> Declare variable *t. <br>
-> **Turn interrupt off.** <br>
-> Set the value of next_tick_to_wakeup to be INT64_MAX, so that whenever there is any smaller ticks, it can be updated. <br>
-> Using while clause, traversal sleep list from the first to end element to find a thread to wake up and call thread_unblock() <br>
->    Set variable t to be the tread that is being currently traversaled. <br>
->    If wakeup_tick(which is the ticks t has to wakeup) is equal or smaller than the parameter ticks(which is current system ticks), unblock t by calling thread_unblock(). <br>
->    If it is not, move to the next sleeping thread and update minimum ticks by calling save_mintick(ticks) <- newly created function. described below. <br>
-> **Turn interrupts on.**
+> - Declare variable *e, and initiate it to be the first element of the sleep list. <br>
+> - Declare variable *t. <br>
+> - **Turn interrupt off.** <br>
+> - Set the value of next_tick_to_wakeup to be INT64_MAX, so that whenever there is any smaller ticks, it can be updated. <br>
+>   - Using while clause, traversal sleep list from the first to end element to find a thread to wake up and call thread_unblock() <br>
+>   -  Set variable t to be the tread that is being currently traversaled. <br>
+>   -  If wakeup_tick(which is the ticks t has to wakeup) is equal or smaller than the parameter ticks(which is current system ticks), unblock t by calling thread_unblock(). <br>
+>   - If it is not, move to the next sleeping thread and update minimum ticks by calling save_mintick(ticks) <- newly created function. described below. <br>
+> - **Turn interrupts on.**
 
 <br>
 
@@ -180,7 +180,7 @@ return_mintick(void){
   return next_tick_to_wakeup;
 }
 ```
-> thread가 가진 tick 중 가장 작은 tick을 나타내는 next_tick_to_wakeup 변수를 반환함
+> - thread가 가진 tick 중 가장 작은 tick을 나타내는 next_tick_to_wakeup 변수를 반환함
 
 <br>
 
@@ -192,7 +192,7 @@ save_mintick(int64_t ticks){
   }
 }
 ```
-> thread가 가진 tick 중 가장 작은 tick을 나타내는 next_tick_to_wakeup 변수를 저장함
+> - thread가 가진 tick 중 가장 작은 tick을 나타내는 next_tick_to_wakeup 변수를 저장함
 
 <br>
 
@@ -207,7 +207,7 @@ timer_sleep (int64_t ticks)
   thread_sleep(start+ticks);
 }
 ```
-> Busy waiting을 방지하기 위해 기존 while문을 제거하고, thread_sleep() 함수를 호출함
+> - Busy waiting을 방지하기 위해 기존 while문을 제거하고, thread_sleep() 함수를 호출함
 
 <br>
 
@@ -226,4 +226,4 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
 }
 ```
-> thread.c에서 정의한 next_tick_to_wakeup 변수를 호출하여 현재 tick과 비교해 깨워야할 thread를 thread_wake() 함수로 ready queue에 넣음
+> - thread.c에서 정의한 next_tick_to_wakeup 변수를 호출하여 현재 tick과 비교해 깨워야할 thread를 thread_wake() 함수로 ready queue에 넣음
