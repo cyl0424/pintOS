@@ -96,6 +96,12 @@ struct thread
     /* tick till wake up */
     int64_t wakeup_tick;
 
+    /* priority donation */
+    int original_priority;
+    struct lock *waiting_lock;
+    struct list donation_list;
+    struct list_elem donation_elem;
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -149,5 +155,9 @@ int64_t return_mintick(void);
 
 bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED);
 void check_max_priority(void);
+
+void donate_priority(void);
+void remove_lock(struct lock *lock);
+void update_priority(void);
 
 #endif /* threads/thread.h */

@@ -43,6 +43,7 @@ void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
 
 bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, void *aux);
+bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux);
 
 /* Optimization barrier.
 

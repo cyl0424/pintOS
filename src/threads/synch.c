@@ -200,8 +200,17 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
+  struct thread *cur = thread_current();
+
+  if (lock->holder != NULL){
+    cur->waiting_lock = lock;
+    list_insert_ordered(&lock->holder->donation_list, &cur->donation_elem, cmp_donation_priority, NULL);
+    donate_priority();
+  }
 
   sema_down (&lock->semaphore);
+  cur->waiting_lock = NULL;
+
   lock->holder = thread_current ();
 }
 
@@ -237,6 +246,10 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
+
+  remove_lock(lock);
+  update_priority();
+
   sema_up (&lock->semaphore);
 }
 
@@ -353,4 +366,8 @@ bool cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, voi
 
 	return list_entry (list_begin (waiter_l_sema), struct thread, elem)->priority
 		 > list_entry (list_begin (waiter_s_sema), struct thread, elem)->priority;
+}
+
+bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
+  return list_entry (max_pri, struct thread, donation_elem) -> priority > list_entry (current_pri, struct thread, donation_elem)-> priority;
 }
