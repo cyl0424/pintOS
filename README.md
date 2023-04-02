@@ -385,7 +385,7 @@ void donate_priority(void)
 
 <br>
 
-#### synch.h
+#### - synch.h
 ```C
 bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux);
 ```
@@ -393,7 +393,7 @@ bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_el
 
 <br>
 
-#### synch.c
+#### - synch.c
 ```C
 void
 lock_acquire (struct lock *lock)
