@@ -158,6 +158,7 @@ bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, voi
 > Declare cmp_sema_priority() function.
 
 <br>
+
 #### - synch.c
 
 ``` C
