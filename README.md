@@ -106,7 +106,8 @@ thread_yield (void)
 <br>
 
 ``` C
-bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
+bool
+cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
   return list_entry (max_pri, struct thread, elem) -> priority > list_entry (current_pri, struct thread, elem)-> priority;
 }
 ```
@@ -216,7 +217,8 @@ cond_wait (struct condition *cond, struct lock *lock)
 <br>
 
 ``` C
-bool cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *aux UNUSED)
+bool
+cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *aux UNUSED)
 {
 	struct semaphore_elem *l_sema = list_entry (l, struct semaphore_elem, elem);
 	struct semaphore_elem *s_sema = list_entry (s, struct semaphore_elem, elem);
@@ -315,6 +317,7 @@ init_thread (struct thread *t, const char *name, int priority)
 <br>
 
 ``` C
+void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
@@ -330,7 +333,8 @@ thread_set_priority (int new_priority)
 <br>
 
 ```C
-void remove_lock(struct lock *lock){
+void
+remove_lock(struct lock *lock){
   struct thread *cur = thread_current();
   struct list_elem *e = list_begin(&cur -> donation_list);
 
