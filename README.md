@@ -8,14 +8,12 @@
 - threads/thread.*
 
 <br>
-<br>
 
 ### 2) To-do
 - **Type** (threads/thread.h) <br>
      : desc
      
  
-<br>
 <br>
 
 ### 3) Project Description
@@ -45,14 +43,12 @@ struct thread {
 - threads/synch.*
 
 <br>
-<br>
 
 ### 2) To-do
 - **Type** (threads/thread.h) <br>
      : desc
 
 
-<br>
 <br>
 
 ### 3) Project Description
@@ -79,7 +75,6 @@ struct thread {
 - threads/synch.*
 
 <br>
-<br>
 
 ### 2) To-do
 - **Modify thread structure** (threads/thread.h) <br>
@@ -94,7 +89,6 @@ struct thread {
      : Donation을 관리하기 위해 코드를 수정해라.
 
 
-<br>
 <br>
 
 ### 3) Project Description
