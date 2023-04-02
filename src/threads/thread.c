@@ -678,16 +678,16 @@ bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *curre
 
 void donate_priority(void)
 {
-	struct thread *holder = thread_current()->waiting_lock->holder;
-	int depth = 0;
-	while (holder != NULL && depth < 8)
-	{
-		holder->priority = thread_current()->priority;
-		if (holder->waiting_lock == NULL)
-			break;
-		holder = holder->waiting_lock->holder;
+  struct thread *holder = thread_current()->waiting_lock->holder;
+  int depth = 0;
+  while (holder != NULL && depth < 8)
+  {
+    holder->priority = thread_current()->priority;
+    if (holder->waiting_lock == NULL)
+      break;
+    holder = holder->waiting_lock->holder;
     depth++;
-	}
+  }
 }
 
 void remove_lock(struct lock *lock){
