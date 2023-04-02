@@ -370,16 +370,16 @@ void update_priority(void){
 ```C
 void donate_priority(void)
 {
-	struct thread *holder = thread_current()->waiting_lock->holder;
-	int depth = 0;
-	while (holder != NULL && depth < 8)
-	{
-		holder->priority = thread_current()->priority;
-		if (holder->waiting_lock == NULL)
-			break;
-		holder = holder->waiting_lock->holder;
+  struct thread *holder = thread_current()->waiting_lock->holder;
+  int depth = 0;
+  while (holder != NULL && depth < 8)
+  {
+    holder->priority = thread_current()->priority;
+    if (holder->waiting_lock == NULL)
+      break;
+    holder = holder->waiting_lock->holder;
     depth++;
-	}
+  }
 }
 ```
 > donation_priority 설명 
