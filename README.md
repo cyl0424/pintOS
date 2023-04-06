@@ -73,7 +73,7 @@ void thread_wakeup(int64_t ticks);
 void save_mintick(int64_t ticks);
 int64_t return_mintick(void);
 ```
-> **Declare the functions in 'thread.h' we newly creadted in 'thread.c'** <br>
+> **Declare the functions in 'thread.h' we newly created in 'thread.c'** <br>
 
 <br>
 
