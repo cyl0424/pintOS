@@ -139,7 +139,7 @@ thread_sleep(int64_t ticks){
 >       - current->wakeup_tick : set to be 'ticks', parameter received from 'thread_sleep()', value of (timer ticks+system tick) <br>
 >   - **Call 'save_minticks()'** <br>
 >         to update the value of minimum tick that threads have <br>
->       - save_minticks() : newly created function. Will be described below <br>
+>       - save_minticks(int64_t ticks) : newly created function. Will be described below <br>
 >   - **Call 'list_push_back()'** <br>
 >         to put the current thread into the sleep queue <br>
 >   - **Call 'thread_block()'** <br>
@@ -195,7 +195,7 @@ thread_wakeup(int64_t ticks){
 >         - **Move to the next sleeping thread** <br>
 >           so that it can keep the traversal <br>
 >         - **Call 'save_mintick(ticks)' to update minimum ticks** <br>
->            - save_mintick() : newly created function. described below. <br>
+>            - save_mintick(int64_t ticks) : newly created function. described below. <br>
 >    - **Turn interrupts on.**
 
 <br>
@@ -210,7 +210,7 @@ save_mintick(int64_t ticks){
 }
 ```
 > **Create a function 'save_mintick()'** <br>
-> - save_mintick(void) : if the currently being traversaled thread 't's 'wakeup_tick' is smaller than the current 'next_tick_to_wakeup', update it to be the former value so that it can have the minimum value of local ticks of threads in 'sleep_list' have
+> - save_mintick(int64_t) : if the currently being traversaled thread 't's 'wakeup_tick' is smaller than the current 'next_tick_to_wakeup', update it to be the former value so that it can have the minimum value of local ticks of threads in 'sleep_list' have
 
 <br>
 
@@ -243,6 +243,7 @@ timer_sleep (int64_t ticks)
 
 <br>
 
+#### To-do 8. Modify timer_interrupt() function.  (devices/timer.c)
 ```C
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
@@ -258,4 +259,5 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
 }
 ```
-> - thread.c에서 정의한 next_tick_to_wakeup 변수를 호출하여 현재 tick과 비교해 깨워야할 thread를 thread_wake() 함수로 ready queue에 넣음
+> **At every tick, check whether some thread must wake up from sleep queue and call 'thread_wakeup()'**
+> - thread.c에서 정의한 next_tick_to_wakeup 변수를 호출하여 현재 tick과 비교해 깨워야할 thread를 thread_wakeup() 함수로 ready queue에 넣음
