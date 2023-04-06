@@ -10,7 +10,7 @@
 <br>
 
 ### 2) To-do
-- **Add cmp_priority() and check_max_priority() function. (threads/thread.h)** <br>
+- **Add cmp_priority() and check_max_priority() function. (threads/thread.*)** <br>
      : Compare the priority between two thread. <br>
      : Compare the priority and run the 'thread_yield ()' depending on the condition. <br>
 
@@ -28,7 +28,7 @@
 ### 3) Project Description
 
 #### - thread.h
-#### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.h)
+#### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.*)
 ``` C
 ...
 
@@ -40,7 +40,7 @@ void check_max_priority(void);
 > **Declare cmp_priority(), check_max_priority() functions in 'thread.h' we newly created in 'thread.c'. Will be described below**
 
 <br>
-
+#### - thread.c
 ``` C
 bool
 cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
@@ -179,6 +179,8 @@ thread_yield (void)
 ### 3) Project Description
 #### - synch.h
 
+##### To-do 1. Add cmp_sema_priority() function. (threads/synch.h)
+
 ``` C
 ...
 
@@ -186,11 +188,81 @@ bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, voi
 
 ...
 ```
-> Declare cmp_sema_priority() function.
+> **Declare cmp_sema_priority() function in 'synch.h' we newly create in 'synch.c'. Will be described in below.**
 
 <br>
 
 #### - synch.c
+``` C
+bool
+cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *aux UNUSED)
+{
+	struct semaphore_elem *l_sema = list_entry (l, struct semaphore_elem, elem);
+	struct semaphore_elem *s_sema = list_entry (s, struct semaphore_elem, elem);
+
+	struct list *waiter_l_sema = &(l_sema->semaphore.waiters);
+	struct list *waiter_s_sema = &(s_sema->semaphore.waiters);
+
+	return list_entry (list_begin (waiter_l_sema), struct thread, elem)->priority
+		 > list_entry (list_begin (waiter_s_sema), struct thread, elem)->priority;
+}
+```
+> **Create a function 'cmp_sema_priority()'** <br>
+> - **bool cmp_sema_priority(const struct list_elem \*l, const struct list_elem \*s, void \*aux UNUSED)** : This function compares the priorities of the first elements of the waiters of two different semaphores and returns a higher priority thread. <br>
+> 	- Why we use first elements of the waiter? : because semaphore's waiters (wait list) are sorted in descending order. <br>
+> - l_sema, s_sema <br>
+>	to get the semaphore element which have input element <br>
+> - waiter_l_sema, waiter_s_sema <br>
+> 	to get the wait lists which have a semaphore element with input element <br>
+
+
+<br>
+
+##### To-do 2. Modify sema_down () function. (threads/synch.c)
+
+``` C
+void
+cond_signal (struct condition *cond, struct lock *lock UNUSED) 
+{
+  ...
+
+  if (!list_empty (&cond->waiters)) {
+    list_sort(&cond -> waiters, cmp_sema_priority, NULL);
+    sema_up (&list_entry (list_pop_front (&cond->waiters), struct semaphore_elem, elem)->semaphore);
+  }
+}
+```
+
+> **Add list_sort() function.** <br>
+> 	- **list_sort(&cond -> waiters, cmp_sema_priority, NULL)** <br>
+> 		- In order to give signal considering the priority between different semaphores in conditional waiters <br>
+>		- This function uses the 'cmp_sema_priority' function to sort the priorities in descending order. <br>
+
+<br>
+##### To-do 3. Modify cond_wait () function. (threads/synch.c)
+
+``` C
+void
+cond_wait (struct condition *cond, struct lock *lock) 
+{
+  ...
+
+  sema_init (&waiter.semaphore, NULL);
+  // list_push_back (&cond->waiters, &waiter.elem);
+  list_insert_ordered(&cond -> waiters, &waiter.elem, cmp_sema_priority, NULL);
+  lock_release (lock);
+  sema_down (&waiter.semaphore);
+  lock_acquire (lock);
+}
+```
+> **Remove list_push_back () function** <br>
+> 	- to consider priority. <br>
+> **Add 'list_insert_ordered() function.** <br>
+> 	- **list_insert_ordered(&cond -> waiters, &waiter.elem, cmp_sema_priority, NULL) <br>
+> 		- When the condition is not satisfied, this function compares the priority of the thread in the existing waiters with the priority of the new thread and sorts it in descending order. <br>
+
+<br>
+##### Modify sema_down () function. (threads/synch.c)
 
 ``` C
 void
@@ -208,62 +280,11 @@ sema_down (struct semaohore *sema)
   ...
 }
 ```
-> priority에 따라 waiters에 추가하도록 list_push_back이 아닌 list_insert_ordered()를 사용함.
-
-<br>
-
-``` C
-void
-cond_signal (struct condition *cond, struct lock *lock UNUSED) 
-{
-  ...
-
-  if (!list_empty (&cond->waiters)) {
-    list_sort(&cond -> waiters, cmp_sema_priority, NULL);
-    sema_up (&list_entry (list_pop_front (&cond->waiters), struct semaphore_elem, elem)->semaphore);
-  }
-}
-```
-> cond의 waiters를 priority에 따라 정렬하도록 list_sort() 함수를 사용함.
-
-<br>
-
-``` C
-void
-cond_wait (struct condition *cond, struct lock *lock) 
-{
-  ...
-
-  sema_init (&waiter.semaphore, NULL);
-  // list_push_back (&cond->waiters, &waiter.elem);
-  list_insert_ordered(&cond -> waiters, &waiter.elem, cmp_sema_priority, NULL);
-  lock_release (lock);
-  sema_down (&waiter.semaphore);
-  lock_acquire (lock);
-}
-```
-> cond의 waiters를 priority에 따라 추가하도록 list_push_back이 아닌 list_insert_ordered()를 사용함.
-
-<br>
-
-``` C
-bool
-cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *aux UNUSED)
-{
-	struct semaphore_elem *l_sema = list_entry (l, struct semaphore_elem, elem);
-	struct semaphore_elem *s_sema = list_entry (s, struct semaphore_elem, elem);
-
-	struct list *waiter_l_sema = &(l_sema->semaphore.waiters);
-	struct list *waiter_s_sema = &(s_sema->semaphore.waiters);
-
-	return list_entry (list_begin (waiter_l_sema), struct thread, elem)->priority
-		 > list_entry (list_begin (waiter_s_sema), struct thread, elem)->priority;
-}
-```
-> 두 waiters의 첫번째 요소가 가진 priority를 비교하는 함수를 추가함.
-
-<br>
-
+> **Remove list_push_back () function** <br>
+> 	- to consider priority. <br>
+> ** Add 'list_insert_ordered() function.** <br>
+> 	- **list_insert_ordered(&cond -> waiters, &waiter.elem, cmp_sema_priority, NULL) <br>
+> 		- When the sema_down() function is called, the semaphore waiters must be rearranged. At this time, this function is rearranged considering the priority. <br>
 
 <br>
 
