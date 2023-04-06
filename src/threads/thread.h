@@ -102,6 +102,10 @@ struct thread
     struct list donation_list;
     struct list_elem donation_elem;
 
+    /* advanced scheduling */
+    int nice;
+    int recent_cpu;
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -159,5 +163,13 @@ void check_max_priority(void);
 void donate_priority(void);
 void remove_lock(struct lock *lock);
 void update_priority(void);
+
+void mlfqs_update_priority (struct thread *);
+void mlfqs_update_recent_cpu (struct thread *);
+void mlfqs_update_load_avg (void);
+void mlfqs_incre_recent_cpu (void);
+void mlfqs_update_recent_cpu_all (void);
+
+void mlfqs_update_priority_all (void);
 
 #endif /* threads/thread.h */
