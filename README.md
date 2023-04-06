@@ -27,8 +27,8 @@
 
 ### 3) Project Description
 
-#### - thread.h
-#### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.*)
+### - thread.h
+### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.*)
 ``` C
 ...
 
@@ -41,7 +41,7 @@ void check_max_priority(void);
 
 <br>
 
-#### - thread.c <br>
+### - thread.c <br>
 
 ```C
 bool
@@ -81,7 +81,7 @@ check_max_priority(void){
 
 <br>
 
-#### - thread.c
+### - thread.c
 #### To-do 2. Modify thread_create() function. (threads/thread.c)
 ``` C
 tid_t
@@ -101,7 +101,7 @@ thread_create (const char *name, int priority,
 > 	- To compare with the priority of new thread and running thread when creating a new thread.
 <br>
 
-##### To-do 3. Modify thread_set_priority() function. (threads/thread.c)
+#### To-do 3. Modify thread_set_priority() function. (threads/thread.c)
 
 ``` C
 void
