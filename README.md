@@ -29,11 +29,11 @@
 
      
 - **Add mlfqs_update_recent_cpu() function.** (threads/thread.\*) <br>
-     : Calculate to change the recent_cpu to (2*load_avg)/(2*load_avg + 1) * recent_cpu + nice.
+     : Calculate to change the recent_cpu to (2\*load_avg)/(2\*load_avg + 1) * recent_cpu + nice.
 
      
 - **Add mlfqs_update_load_avg() function.**  (threads/thread.\*) <br>
-     : Calculate to change load_avg to (59/60)*load_avg + (1/60)*ready_threads.
+     : Calculate to change load_avg to (59/60)\*load_avg + (1/60)\*ready_threads.
 
      
 - **Add mlfqs_incre_recent_cpu() function.** (threads/thread.\*) <br>
