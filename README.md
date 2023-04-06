@@ -360,13 +360,13 @@ void update_priority(void);
 > **Declare donate_priority(), remove_lock(), update_priority() functions in 'thread.h' we newly created in 'thread.c'.**
 
 <br>
-#### To-do 2. Add update8_priority() function. (threads/
+
+#### To-do 2. Add update_priority() function. (threads/thread.c)
 
 ```C
 void update_priority(void){
   struct thread *cur = thread_current();
-  cur->priority = cur->original_priority;
-
+  cur->priority = cur->original_current
   if (!list_empty(&cur->donation_list)){
       struct thread *t = list_entry(list_begin(&cur->donation_list), struct thread, donation_elem);
 
@@ -376,10 +376,20 @@ void update_priority(void){
   }
 }
 ```
-> thread_current()의 priority와 donation_list 첫번째 요소의 priority를 비교하여 priority를 update하는 함수를 추가함.
+> **Create a function 'update_priority ()'** <br>
+> - **void update_priority(void)**: This function updates the priority of the running thread to the priority of the donation if the priority of the element of the donation list is greater compared to the priority of the current running thread.
+> 	- cur: currently running thread <br>
+> 	- cur -> priority = cur -> original_priority: because 'donation_list' is already sorted based on the threads' priority, we only need to compare the first element in 'donation_list' and the currently running thread's original priority to figure out the highest priority to inherit. so, set the priority of current thread to be its original priority before being compared. <br>
+> - **if (!list_empty(&cur->donation_list))** <br>
+> 	- set thread t : the first element's thread in the donation list of currently running thread <br>
+> - **if (&cur->priority < &t->priority)**: if first element priority of donation list is greater than currently running original priority <br>
+> 	- inherit the priority of the current thread to the first element priority of donation list 
 
 <br>
 
+#### To-do 3. donate_priority() function. (threads/thread.c)
+
+```C
 void donate_priority(void)
 {
   struct thread *holder = thread_current()->waiting_lock->holder;
@@ -393,8 +403,10 @@ void donate_priority(void)
     depth++;
   }
 }
-
+```
 <br>
+
+#### To-do 4. Add remove_lock() function. (threads/thread.c)
 
 ```C
 void
