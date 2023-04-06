@@ -144,7 +144,6 @@ thread_sleep(int64_t ticks){
 >         to put the current thread into the sleep queue <br>
 >   - **Call 'thread_block()'** <br>
 >         to set the status of the current thread to be 'THREAD_BLOCKED' <br>
->       - thread_block() : newly created function. Will be described below <br>
 >   - **<span style="color:orange"> interrupts turn on </span>**
 
 <br>
@@ -190,13 +189,12 @@ thread_wakeup(int64_t ticks){
 >       - e : list element that is currently being traversaled. <br>
 >       - t : thread that is currently being traversaled <br>
 >       - if (t-> wakeup_tick <= ticks) : if there is any thread whose 'wakeup_tick'(tick when to wake up), is equal or smaller thant the current ticks <br>
->       - **Remove 'e' from 'sleep_list'** <br>
->       - **Call 'thread_unblock(t) to unblock the thread 't'** <br>
->           - thread_unblock() : newly created function. Will be described below <br>
->           - else : if it is not time for 't' to wake up <br>
->       - **Move to the next sleeping thread** <br>
+>         - **Remove 'e' from 'sleep_list'** <br>
+>         - **Call 'thread_unblock(t) to unblock the thread 't'** <br>
+>       - else : if it is not time for 't' to wake up <br>
+>         - **Move to the next sleeping thread** <br>
 >           so that it can keep the traversal <br>
->       - **Call 'save_mintick(ticks)' to update minimum ticks** <br>
+>         - **Call 'save_mintick(ticks)' to update minimum ticks** <br>
 >            - save_mintick() : newly created function. described below. <br>
 >    - **Turn interrupts on.**
 
@@ -241,7 +239,7 @@ timer_sleep (int64_t ticks)
 }
 ```
 > **Delete while clause, call 'thread_sleep()' instead** <br>
-> - Busy waiting을 방지하기 위해 기존 while문을 제거하고, thread_sleep() 함수를 호출함
+> - thread_sleep(start+ticks) : call thread_sleep with the parameter of the sum of the current system tick and the number of ticks the thread should be sleeping, indicating when it should be waken up. -> the local tick of the thread, 'wakeup
 
 <br>
 
