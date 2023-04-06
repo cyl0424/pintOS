@@ -264,7 +264,7 @@ void mlfqs_update_recent_cpu (struct thread *t){
 
 <br>
 
-#### To-do 5. Add mlfqs_update_load_avg() function.  (threads/thread.c)
+### To-do 5. Add mlfqs_update_load_avg() function.  (threads/thread.c)
 #### - thread.c
 ```C
 void mlfqs_update_load_avg (void){
@@ -292,7 +292,7 @@ void mlfqs_update_load_avg (void){
 
 <br>
 
-#### To-do 6. Add mlfqs_incre_recent_cpu() function.  (threads/thread.c)
+### To-do 6. Add mlfqs_incre_recent_cpu() function.  (threads/thread.c)
 #### - thread.c
 ``` C
 void mlfqs_incre_recent_cpu (void){
