@@ -526,17 +526,17 @@ lock_acquire (struct lock *lock)
   lock->holder = thread_current ();
 }
 ```
-> **Add thread struct '\*cur'** <br>
+> - **Add thread struct '\*cur'** <br>
 >   - \*cur : currently running thread <br>
-> **Add if clause** <br>
+> - **Add if clause** <br>
 >   - if (lock->holder != NULL) : if the lock being waited for is being held by any thread <br>
 >   - cur->waiting_lock : set 'waiting_lock', which refers to the lock the thread is waiting for, to be the parameter received from 'lock_acquire()' <br>
 >   - list_insert_ordered() : return ordered list of the waited lock's holder's 'donation_list', based on 'cmp_donation_priority' <br>
 >   - cmp_donation_priority() : return boolean result of comparing priority of each threads. newly created function, described below. <br>
 >   - donate_priority() : <br>
-> **Decrease a semaphore of 'lock'** <br>
-> **Set 'waiting_lock' of current thread to be NULL** <br>
-> **Set 'holder' of 'lock' to be the currently running thread** <br>
+> - **Decrease a semaphore of 'lock'** <br>
+> - **Set 'waiting_lock' of current thread to be NULL** <br>
+> - **Set 'holder' of 'lock' to be the currently running thread** <br>
 
 <br>
 
