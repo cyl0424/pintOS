@@ -188,7 +188,7 @@ thread_wakeup(int64_t ticks){
 >       - while(e != list_end(&sleep_list)) : traversal 'sleep_list' from the first to end element <br>
 >       - e : list element that is currently being traversaled. <br>
 >       - t : thread that is currently being traversaled <br>
->       - if (t-> wakeup_tick <= ticks) : if there is any thread whose 'wakeup_tick'(tick when to wake up), is equal or smaller thant the current ticks <br>
+>       - if (t-> wakeup_tick <= ticks) : if there is any thread whose 'wakeup_tick'(tick when to wake up), is equal or smaller than the current ticks <br>
 >         - **Remove 'e' from 'sleep_list'** <br>
 >         - **Call 'thread_unblock() to unblock the thread 't'** <br>
 >       - else : if it is not time for 't' to wake up <br>
