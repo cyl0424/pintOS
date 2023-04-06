@@ -10,12 +10,17 @@
 <br>
 
 ### 2) To-do
-- **Add cmp_priority() function.** (threads/thread.c) <br>
-     : Compare the priority between two thread.
-     
+- **Add cmp_priority() and check_max_priority() function. (threads/thread.h)** <br>
+     : Compare the priority between two thread. <br>
+     : Compare the priority and run the 'thread_yield ()' depending on the condition. <br>
 
-- **Add check_max_priority() function.** (threads/thread.c) <br>
-     :  Compare the priority and run the 'thread_yield ()' depending on the condition.
+- **Modify thread_create() function. (threads/thread.c)** <br>
+
+- **Modify thread_set_priority() function. (threads/thread.c)** <br>
+
+- **Modify thread_unblock() function. (threads/thread.c)** <br>
+
+- **Modify 'thread_yield ()' function. (threads/thread.c)** <br>
 
   
 <br>
