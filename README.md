@@ -321,6 +321,8 @@ sema_down (struct semaohore *sema)
 
 ### 3) Project Description
 #### - thread.h
+#### To-do 1. Modify thread structure (threads/thread.h)
+
 ``` C
 struct thread {
 
@@ -336,9 +338,13 @@ struct thread {
 
 }
 ```
-> - inherit priority에서 원래의 priority로 돌아올 때 사용할 original_priority를 추가함
-> - lock을 control하기 위한 waiting_lock을 추가함
-> - donation을 위한 donation_list, donation_elem을 추가함
+> **Add int type field named 'original_priority' <br>
+> 	- Save original priority - (in priority inheritance, to return to original priority) <br>
+> **Add lock pointer type field named 'waiting_lock'** <br>
+> 	- If the lock is not available, store address of the lock** <br>
+> **Add list type field named 'donation_list'** <br>
+> **Add list_elem type field named 'donation_elem'** <br>
+> 	- to prepare multiple donation** <br>
 
 <br>
 
@@ -351,7 +357,64 @@ void update_priority(void);
 
 ...
 ```
-> Declare donate_priority(), remove_lock(), update_priority() functions.
+> **Declare donate_priority(), remove_lock(), update_priority() functions in 'thread.h' we newly created in 'thread.c'.**
+
+<br>
+#### To-do 2. Add update8_priority() function. (threads/
+
+```C
+void update_priority(void){
+  struct thread *cur = thread_current();
+  cur->priority = cur->original_priority;
+
+  if (!list_empty(&cur->donation_list)){
+      struct thread *t = list_entry(list_begin(&cur->donation_list), struct thread, donation_elem);
+
+      if (&cur->priority < &t->priority){
+        cur->priority = t->priority;
+      }
+  }
+}
+```
+> thread_current()의 priority와 donation_list 첫번째 요소의 priority를 비교하여 priority를 update하는 함수를 추가함.
+
+<br>
+
+void donate_priority(void)
+{
+  struct thread *holder = thread_current()->waiting_lock->holder;
+  int depth = 0;
+  while (holder != NULL && depth < 8)
+  {
+    holder->priority = thread_current()->priority;
+    if (holder->waiting_lock == NULL)
+      break;
+    holder = holder->waiting_lock->holder;
+    depth++;
+  }
+}
+
+<br>
+
+```C
+void
+remove_lock(struct lock *lock){
+  struct thread *cur = thread_current();
+  struct list_elem *e = list_begin(&cur -> donation_list);
+
+  while(e != list_tail(&cur->donation_list)){
+    struct thread *t = list_entry(e, struct thread, donation_elem);
+
+    if(t->waiting_lock == lock){
+      e = list_remove(e);
+    }else{
+      e = list_next(e);
+    }
+  }
+}
+```
+> 현재 쓰레드의 donation_list를 순회하며 donation_list 요소의 waiting_lock이 삭제하고자 하는 lock과 같다면 제거하는 함수를 추가함.
+
 
 <br>
 
@@ -390,63 +453,10 @@ thread_set_priority (int new_priority)
 > - original_priority값을 new_priority로 선언함
 > - thread의 priority 변수값을 donation_list 첫번째 요소의 priority와 비교하여 update하도록 update_priority() 함수를 사용함.
 
-<br>
 
-```C
-void
-remove_lock(struct lock *lock){
-  struct thread *cur = thread_current();
-  struct list_elem *e = list_begin(&cur -> donation_list);
 
-  while(e != list_tail(&cur->donation_list)){
-    struct thread *t = list_entry(e, struct thread, donation_elem);
 
-    if(t->waiting_lock == lock){
-      e = list_remove(e);
-    }else{
-      e = list_next(e);
-    }
-  }
-}
-```
-> 현재 쓰레드의 donation_list를 순회하며 donation_list 요소의 waiting_lock이 삭제하고자 하는 lock과 같다면 제거하는 함수를 추가함.
 
-<br>
-
-```C
-void update_priority(void){
-  struct thread *cur = thread_current();
-  cur->priority = cur->original_priority;
-
-  if (!list_empty(&cur->donation_list)){
-      struct thread *t = list_entry(list_begin(&cur->donation_list), struct thread, donation_elem);
-
-      if (&cur->priority < &t->priority){
-        cur->priority = t->priority;
-      }
-  }
-}
-```
-> thread_current()의 priority와 donation_list 첫번째 요소의 priority를 비교하여 priority를 update하는 함수를 추가함.
-
-<br>
-
-```C
-void donate_priority(void)
-{
-  struct thread *holder = thread_current()->waiting_lock->holder;
-  int depth = 0;
-  while (holder != NULL && depth < 8)
-  {
-    holder->priority = thread_current()->priority;
-    if (holder->waiting_lock == NULL)
-      break;
-    holder = holder->waiting_lock->holder;
-    depth++;
-  }
-}
-```
-> donation_priority 설명 
 
 <br>
 
