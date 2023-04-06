@@ -233,7 +233,7 @@ void mlfqs_update_priority (struct thread *t){
 
 <br>
 
-#### To-do 4. Add mlfqs_update_recent_cpu() function.  (threads/thread.c)
+### To-do 4. Add mlfqs_update_recent_cpu() function.  (threads/thread.c)
 #### - thread.c
 ```C
 void mlfqs_update_recent_cpu (struct thread *t){
