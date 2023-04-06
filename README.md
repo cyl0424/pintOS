@@ -41,11 +41,11 @@
      
      
 - **Add mlfqs_update_priority_all() function.** (threads/thread.\*) <br>
-     : Run mlfqs_update_priority() for all_list's recent_cpu.
+     : Run mlfqs_update_priority() for updating all_list's priority.
 
 
-- **Add mlfqs_update_priority_all() function.** (threads/thread.\*) <br>
-     : Run mlfqs_update_priority() for all_list's recent_cpu.
+- **Add mlfqs_update_priority_recent_cpu_all() function.** (threads/thread.\*) <br>
+     : Run mlfqs_update_priority() for updating all_list's recent_cpu.
      
      
 - **Modify thread_start() function.** (threads/thread.c) <br>
@@ -57,7 +57,7 @@
      
      
 - **Modify thread_set_priority() function.** (threads/thread.c) <br>
-     : Modify the function in case it runs in mafqs.
+     : Modify the function in case it runs in mfqs.
      
      
 - **Modify thread_set_nice() function.** (threads/thread.c) <br>
@@ -191,12 +191,12 @@ int div_mixed(int x, int n) {
 ``` C
 struct thread
 {
-...
+    ...
 
     int nice;
     int recent_cpu;
 
-...
+    ...
 }
 ```
 > **Add new int type fields for advanced scheduling.** <br>
@@ -224,13 +224,16 @@ void mlfqs_update_priority (struct thread *t){
     t->priority = result;
   }
 }
-}
 ```
 > **Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice * 2)** <br>
+> - a and c are int type variables.
+> - recent_cpu is float type and -4 is int type. So, div_mixed() function is used to calculate.
+> - b is float type and d is int type. So, add_mixed() function is used to calculate.
+> - priority should be int type. So, fixed_point_to_int() is used to convert float type to int type.
 
 <br>
 
-#### To-do 4.Add mlfqs_update_recent_cpu() function.  (threads/thread.c)
+#### To-do 4. Add mlfqs_update_recent_cpu() function.  (threads/thread.c)
 #### - thread.c
 ```C
 void mlfqs_update_recent_cpu (struct thread *t){
@@ -252,6 +255,12 @@ void mlfqs_update_recent_cpu (struct thread *t){
 }
 ```
 > **Calculate to change the recent_cpu to (2load_avg)/(2load_avg + 1) * recent_cpu + nice.** <br>
+> - load_avg is float type and 2 is int type. So mult_mixed() is used to calculate.
+> - a is float type and 1 is int type. So, add_mixed() function is used to calculate.
+> - a and b are float type variables. So, div_fixed_point() function is used to calculate.
+> - a_b and recent_cpu are float type variables. So. mult_fixed_point is used to calculate.
+> - c is float type and nice is int type. So, add_mixed() is used to calculate.
+> - recent_cpu should not be negative. So, set the value of result to 0, if result is negative.
 
 <br>
 
@@ -275,6 +284,11 @@ void mlfqs_update_load_avg (void){
 }
 ```
 > **Calculate to change load_avg to (59/60)\*load_avg + (1/60)\*ready_threads.** <br>
+> - ready_threads are the size of ready_list. But, if thread_current is not idle_thread 1 should be added. 
+> - To calculate 59/60 and 1/60, convert the value type to float type and use div_fixed_point() function.
+> - a and load_avg are float type variables. So, mult_fixed_point() function to calculate.
+> - c is float type and ready_threads is int type. So, mult_mixed() function to calculate.
+> - b and d are float type variables. So, add_fixed_point() function to calculate.
 
 <br>
 
@@ -290,6 +304,8 @@ void mlfqs_incre_recent_cpu (void){
 }
 ```
 > **Calculate to add 1 to the recent_cpu.** <br>
+> - If thread_current is not idle_thread, recent_cpu increase by 1.
+> - recent_cpu is float type and 1 is int type. So, add_mixed is used to calculate.
 
 <br>
 
@@ -305,7 +321,7 @@ void mlfqs_update_priority_all (void){
     }
 }
 ```
-> **mlfqs_update_priority() function is for all_list's recent_cpu.** <br>
+> **mlfqs_update_priority() function is for updating all_list's priority.** <br>
 
 <br>
 
@@ -321,7 +337,7 @@ void mlfqs_update_recent_cpu_all (void){
     }
 }
 ```
-> **mlfqs_update_recent_priority() function is for all_list's priority.** <br>
+> **mlfqs_update_recent_priority() function is for updating all_list's recent_cpu.** <br>
 
 #### - thread.h
 ```C
@@ -343,9 +359,17 @@ void mlfqs_update_priority_all (void);
 ### To-do 9. Modify init_thread() function.  (threads/thread.c)
 #### - thread.c
 ```C
+static void
+init_thread (struct thread *t, const char *name, int priority)
+{
+  ...
 
+  t->nice = 0;
+  t-> recent_cpu = 0;
+}
 ```
-
+> **Initialize the nice and recent_cpu.**
+> - The default values of nice and recent_cpu are 0. 
 
 <br>
 
@@ -364,7 +388,8 @@ thread_set_priority (int new_priority)
   }
 }
 ```
-> ****
+> **Modify the function in case it runs in mlfqs.**
+> - Added if statement because priority cannot be changed arbitrarily in mlfqs scheduler.
 
 <br>
 
@@ -383,7 +408,10 @@ thread_set_nice (int nice UNUSED)
 }
 
 ```
-> ****
+> **Implement functions for setting nice.**
+> - The interrupt must be disabled to set the nice of the current thread accurately.
+> - Set the current thread's nice value and update the priority by using mlfqs_update_priority().
+> - Schedule according to priority.
 
 <br>
 
@@ -401,7 +429,9 @@ thread_get_nice (void)
 }
 
 ```
-> ****
+> **Implement functions for getting nice.**
+> - The interrupt must be disabled to set the nice of the current thread accurately.
+> - Return the current_thread's nice.
 
 
 <br>
@@ -420,7 +450,10 @@ thread_get_load_avg (void)
 }
 
 ```
-> ****
+> **Implement functions for getting load_avg.**
+> - The interrupt must be disabled to get the load_avg accurately
+> - load_avg is float type and 100 is int. So, mult_mixed is using to calculate.
+> - Because the function type is int, result should be int. So, fixed_point_to_int_round is used to calculate.
 
 <br>
 
@@ -438,7 +471,10 @@ thread_get_recent_cpu (void)
 }
 
 ```
-> ****
+> **Implement functions for getting recent_cpu.**
+> - The interrupt must be disabled to get the recent accurately.
+> - recent_cpu is float type and 100 is int type. So, mult_mixed() is used to calculate.
+> - Because the function type is int, result should be int. So, fixed_point_to_int_round is used to calculate.
 
 <br>
 
@@ -452,7 +488,6 @@ lock_acquire (struct lock *lock)
     if (lock->holder != NULL){
         cur->waiting_lock = lock;
         list_insert_ordered(&lock->holder->donation_list, &cur->donation_elem, cmp_donation_priority, NULL);
-        donate_priority();
     
         if(!thread_mlfqs){
           donate_priority();
@@ -460,7 +495,8 @@ lock_acquire (struct lock *lock)
     }
 }
 ```
-> ****
+> **Modify the function not to run donate_priority when mlfqs.**
+> - Added if condition statement because donation should be disabled when mlfqs scheduler.
 
 <br>
 
@@ -468,7 +504,7 @@ lock_acquire (struct lock *lock)
 #### - synch.c
 ```C
 void
-lock_acquire (struct lock *lock)
+lock_release (struct lock *lock)
 {
     ...
     
@@ -477,10 +513,11 @@ lock_acquire (struct lock *lock)
         update_priority();
     }
     
-   ...
+    ...
 }
 ```
-> ****
+> **Modify the function not to run donate_priority when mlfqs.**
+> - Added if condition statement because donation should be disabled when mlfqs scheduler.
 
 <br>
 
@@ -490,7 +527,7 @@ lock_acquire (struct lock *lock)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
-...
+    ...
 
     if (thread_mlfqs){
         mlfqs_incre_recent_cpu();
@@ -505,9 +542,15 @@ timer_interrupt (struct intr_frame *args UNUSED)
         }
     }
 
-...
+    ...
 }
 ```
-> ****
+> **Calculate recent_cpu, priority, load_avg as tick grows.
+> - For mlfqs schedulers, the tick should be increased by 1 each time time_interrupt is called.
+> - Update all priorities every 4 seconds by using 'mlfqs_update_priority_all()'.
+> - Update load_avg by using 'mlfqs_update_load_avg()' when timer_ticks() % TIMER_FREQ == 0.
+> - Update all recent_cpu by using 'mlfqs_update_recent_cpu_all()' when timer_ticks() % TIMER_FREQ == 0.
+
+**
 
 <br>
