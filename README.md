@@ -545,12 +545,11 @@ timer_interrupt (struct intr_frame *args UNUSED)
     ...
 }
 ```
-> **Calculate recent_cpu, priority, load_avg as tick grows.
+> **Calculate recent_cpu, priority, load_avg as tick grows.**
 > - For mlfqs schedulers, the tick should be increased by 1 each time time_interrupt is called.
 > - Update all priorities every 4 seconds by using 'mlfqs_update_priority_all()'.
 > - Update load_avg by using 'mlfqs_update_load_avg()' when timer_ticks() % TIMER_FREQ == 0.
 > - Update all recent_cpu by using 'mlfqs_update_recent_cpu_all()' when timer_ticks() % TIMER_FREQ == 0.
 
-**
 
 <br>
