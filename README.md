@@ -502,7 +502,7 @@ bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_el
 <br>
 
 ### - synch.c
-
+#### To-do 8. Modify lock_aquire() function. (threads/synch.c)
 ```C
 void
 lock_acquire (struct lock *lock)
@@ -526,7 +526,17 @@ lock_acquire (struct lock *lock)
   lock->holder = thread_current ();
 }
 ```
-> lock_acquire 설명 추가
+> **Add thread struct '\*cur'**
+> - \*cur : currently running thread
+> **Add if clause**
+> - if (lock->holder != NULL) : if the lock being waited for is being held by any thread
+> - cur->waiting_lock : set 'waiting_lock', which refers to the lock the thread is waiting for, to be the parameter received from 'lock_acquire()'
+> - list_insert_ordered() : return ordered list of the waited lock's holder's 'donation_list', based on 'cmp_donation_priority'
+> - cmp_donation_priority() : return boolean result of comparing priority of each threads. newly created function, described below.
+> - donate_priority() : 
+> **Decrease a semaphore of 'lock'**
+> **Set 'waiting_lock' of current thread to be NULL**
+> **Set 'holder' of 'lock' to be the currently running thread** 
 
 <br>
 
