@@ -259,5 +259,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
 }
 ```
-> **At every tick, check whether some thread must wake up from sleep queue and call 'thread_wakeup()'**
-> - thread.c에서 정의한 next_tick_to_wakeup 변수를 호출하여 현재 tick과 비교해 깨워야할 thread를 thread_wakeup() 함수로 ready queue에 넣음
+> **Add int64_t type 'minTick'**
+> - minTick : save the value of 'next_tick_to_wakeup', which is the minimum value of 'wakeup_tick' of theads in the 'sleep_list' so far.
+> - if (ticks >= minTick) : if the current ticks is equal or larger than the current minTick, wake a thread up that are needed to be.
