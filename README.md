@@ -176,8 +176,9 @@ thread_wakeup(int64_t ticks){
 }
 ```
 > **Create a function 'thread_wakeup()'** <br>
-> - thread_wakeup(int64_t ticks) : It is called whenever a thread need to wake up, that is, need to be unblocked and removed from sleep queue <br>
->    **Declare list_elem struct variable '\*e'** <br>
+> - thread_wakeup(int64_t ticks) : <br>
+>   It is called whenever a thread need to wake up, that is, need to be unblocked and removed from sleep queue <br>
+>   **Declare list_elem struct variable '\*e'** <br>
 >     - \*e : to point the list element of the sleep queue <br>
 >   **Declare thread struct variable '\*t'** <br>
 >     - \*t : to point the thread structure of currently being traversaled 'e' in the sleep queue <br>
