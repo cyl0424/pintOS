@@ -24,67 +24,67 @@
      : Add new int type fields for advanced scheduling.
 
      
-- **Add mlfqs_update_priority() function.** (threads/thread.*) <br>
+- **Add mlfqs_update_priority() function.** (threads/thread.\*) <br>
      : Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice * 2).
 
      
-- **Add mlfqs_update_recent_cpu() function.** (threads/thread.*) <br>
+- **Add mlfqs_update_recent_cpu() function.** (threads/thread.\*) <br>
      : Calculate to change the recent_cpu to (2*load_avg)/(2*load_avg + 1) * recent_cpu + nice.
 
      
-- **Add mlfqs_update_load_avg() function.**  (threads/thread.*) <br>
+- **Add mlfqs_update_load_avg() function.**  (threads/thread.\*) <br>
      : Calculate to change load_avg to (59/60)*load_avg + (1/60)*ready_threads.
 
      
-- **Add mlfqs_incre_recent_cpu() function.** (threads/thread.*) <br>
+- **Add mlfqs_incre_recent_cpu() function.** (threads/thread.\*) <br>
      : Calculate to add 1 to the recent_cpu.
      
      
-- **Add mlfqs_update_priority_all() function.** (threads/thread.*) <br>
+- **Add mlfqs_update_priority_all() function.** (threads/thread.\*) <br>
      : Run mlfqs_update_priority() for all_list's recent_cpu.
 
 
-- **Add mlfqs_update_priority_all() function.** (threads/thread.*) <br>
+- **Add mlfqs_update_priority_all() function.** (threads/thread.\*) <br>
      : Run mlfqs_update_priority() for all_list's recent_cpu.
      
      
-- **Modify thread_start() function. (threads/thread.c) <br>
+- **Modify thread_start() function.** (threads/thread.c) <br>
      : Declare new int type global variable 'load_avg' in thread.c and initialize it in thread_start().
      
      
-- **Modify init_thread() function. (threads/thread.c) <br>
+- **Modify init_thread() function.** (threads/thread.c) <br>
      : Initialize the nice and recent_cpu.
      
      
-- **Modify thread_set_priority() function. (threads/thread.c) <br>
+- **Modify thread_set_priority() function.** (threads/thread.c) <br>
      : Modify the function in case it runs in mafqs.
      
      
-- **Modify thread_set_nice() function. (threads/thread.c) <br>
+- **Modify thread_set_nice() function.** (threads/thread.c) <br>
      : Implement functions for setting nice.
      
      
-- **Modify thread_get_nice() function. (threads/thread.c) <br>
+- **Modify thread_get_nice() function.** (threads/thread.c) <br>
      : Implement functions for getting nice.
     
     
-- **Modify thread_get_load_avg() function. (threads/thread.c) <br>
+- **Modify thread_get_load_avg() function.** (threads/thread.c) <br>
      : Implement functions for getting load_avg.
      
     
-- **Modify thread_get_recent_cpu() function. (threads/thread.c) <br>
+- **Modify thread_get_recent_cpu() function.** (threads/thread.c) <br>
      : Implement functions for getting recent_cpu.
      
      
-- **Modify lock_aquire() function. (threads/synch.c) <br>
+- **Modify lock_aquire() function.** (threads/synch.c) <br>
      : Modify the function not to run donate_priority when mlfqs.
      
     
-- **Modify lock_release() function. (threads/synch.c) <br>
+- **Modify lock_release() function.** (threads/synch.c) <br>
      : Modify the function not to run donate_priority when mlfqs.
      
      
-- **Modify timer_interrupt() function. (devices/timer.c) <br>
+- **Modify timer_interrupt() function.** (devices/timer.c) <br>
      : Calculate recent_cpu, priority, load_avg as tick grows.
      
 
