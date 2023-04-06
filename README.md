@@ -392,16 +392,16 @@ void update_priority(void){
 ```C
 void donate_priority(void)
 {
-  struct thread *holder = thread_current()->waiting_lock->holder;
-  int depth = 0;
-  while (holder != NULL && depth < 8)
-  {
-    holder->priority = thread_current()->priority;
-    if (holder->waiting_lock == NULL)
-      break;
-    holder = holder->waiting_lock->holder;
-    depth++;
-  }
+    struct thread *holder = thread_current()->waiting_lock->holder;
+    int count = 0;
+    while (holder != NULL)
+    {
+	holder->priority = thread_current()->priority;
+	count++;
+        if (count > 8 || holder->waiting_lock == NULL)
+	    break;
+	    holder = holder->waiting_lock->holder;
+    }
 }
 ```
 > **Add thread struct variable '\*holder'** <br>
