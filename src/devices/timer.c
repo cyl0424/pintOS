@@ -171,8 +171,20 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  
+
   int64_t minTick = return_mintick();
+
+  if (thread_mlfqs){
+    mlfqs_incre_recent_cpu();
+    if(timer_ticks() % 4 == 0){
+      mlfqs_update_priority_all();
+
+      if (timer_ticks() % 100 == 0){
+        mlfqs_update_load_avg();
+        mlfqs_update_recent_cpu_all();
+      }
+    }
+  }
 
   if (ticks >= minTick){
     thread_wakeup(ticks);
