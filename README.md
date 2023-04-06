@@ -48,6 +48,7 @@
 ## Project Description
 
 ### - thread.h
+#### To-do 1. Modify thread structure.** (threads/thread.h)
 
 ``` C
 struct thread {
@@ -61,7 +62,8 @@ struct thread {
 
 }
 ```
-> - Add int64_t type variable named 'wakeup_tick', which will save the value of (its timer ticks + system ticks)
+> **Add int64_t type field named 'wakeup_tick'to thread structure** <br>
+> • wakeup_tick : the value of (its timer ticks + system ticks)
 
 <br>
 
@@ -71,19 +73,20 @@ void thread_wakeup(int64_t ticks);
 void save_mintick(int64_t ticks);
 int64_t return_mintick(void);
 ```
-> - Declare the functions we newly creadted in 'thread.c'
+> - Declare the functions in 'thread.h' we newly creadted in 'thread.c' 
 
 <br>
 
 ### - thread.c
+#### To-do 2. Modify thread_init() function.** (threads/thread.c)
 ``` C
 /* project 1 : the list to control blocked thread */
 static struct list sleep_list;
 static int64_t next_tick_to_wakeup;
 ```
 > - Define the sleep_list and next_tick_to_wakeup <br>
-> - sleep_list is a queue to store blocked threads until its time to wake them up <br>
-> - next_tick_to_wakeup is 
+> - • sleep_list : a queue to store blocked threads until its time to wake them up <br>
+> - • next_tick_to_wakeup : the minimum value of tick that threads have 
 
 <br>
 
