@@ -24,7 +24,7 @@
 ### 3) Project Description
 
 #### - thread.h
-#####To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.h)
+##### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.h)
 ``` C
 ...
 
@@ -43,8 +43,8 @@ cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pr
   return list_entry (max_pri, struct thread, elem) -> priority > list_entry (current_pri, struct thread, elem)-> priority;
 }
 ```
-> **Create a function 'cmp_priority()'
-> - bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED) : This function returns a True only if the priority of the first thread on the ready_list is greater than the priority of the current running thread
+> **Create a function 'cmp_priority()'**
+> - **bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED)** : This function returns a True only if the priority of the first thread on the ready_list is greater than the priority of the current running thread
 >	- **list_entry (max_pri, struct thread, elem) -> priority** <br>
 >		to get the priority of thread located at the first of the ready_list <br>
 > 	- **list_entry(current_pri, struct thread, elem) -> priority** <br>
@@ -64,8 +64,9 @@ check_max_priority(void){
   }
 }
 ```
-> **Create a function 'cmp_priority()'
-> ready_list 첫번째에 위치한 thread의 priority와 현재 thread의 priority를 비교하여 ready_list에 위치한 thread의 priority가 더 클 경우에만 thread_yield()를 실행하도록 하는 함수를 추가함.
+> **Create a function 'check_max_priority(void)'**
+> - **check_max_priority(void)** : This function execute 'thread_yield()' only if the priority of the first thread on the ready_list is greater than the priority of the current running thread.
+> 	- 
 
 <br>
 
