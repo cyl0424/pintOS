@@ -416,13 +416,14 @@ void donate_priority(void)
     }
 }
 ```
-> **Add thread struct variable '\*holder'** <br>
->   - \*holder : holder of the lock that currently running thread is waiting for <br>
-> **Add int type variable 'depth' and initialize to be 0** <br>
->   - depth : 
-> ** <br>
-> - - holder->priority = thread_current()->priority : set holder's priority to be the current thread's priority
->
+> - **Add thread struct variable '\*holder'** <br>
+> 	- \*holder : holder of the lock that currently running thread is waiting for <br>
+> - **Add int type variable 'count' and initialize to be 0** <br>
+>  	- count : To check the number of threads inherited from multiple donation, and the maximum value is set to 8 by referring to the reference. (https://casys-kaist.github.io/pintos-kaist/project1/priority_scheduling.html) <br>
+> - **Add a while statement to do the following actions only when the holder is not null**<br>
+>  	- holder->priority = thread_current()->priority : set holder's priority to be the current thread's priority
+>  	- Increase the number of inherited threads and stop if the inherited threads are greater than 8.
+>  	- Change the holder to the lock holder that the holder of the holder waits for.
 <br>
 
 #### To-do 4. Add remove_lock() function. (threads/thread.c)
@@ -570,7 +571,8 @@ lock_acquire (struct lock *lock)
 > - **Set 'holder' of 'lock' to be the currently running thread** <br>
 
 <br>
-#### To-do 9. Modify 'lock_release()' function. <threads/synch.c>
+
+#### To-do 9. Modify 'lock_release()' function. (threads/synch.c)
 ```C
 void
 lock_release (struct lock *lock) 
@@ -587,9 +589,9 @@ lock_release (struct lock *lock)
 }
 ```
 > - **Call 'remove_lock()' function** <br>
->   to release the 'lock', check if there is any thread waiting for it and give it to that thread <br>
+>   - to release the 'lock', check if there is any thread waiting for it and give it to that thread <br>
 > - **Call 'update_priority()' function** <br>
->   update priority since there may be change in 'donation_list' after calling 'remove_lock()' if there was any thread waiting for the lock <br>
+>   - update priority since there may be change in 'donation_list' after calling 'remove_lock()' if there was any thread waiting for the lock <br>
 
 <br>
 
