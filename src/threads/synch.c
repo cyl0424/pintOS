@@ -205,7 +205,9 @@ lock_acquire (struct lock *lock)
   if (lock->holder != NULL){
     cur->waiting_lock = lock;
     list_insert_ordered(&lock->holder->donation_list, &cur->donation_elem, cmp_donation_priority, NULL);
-    donate_priority();
+    if(!thread_mlfqs){
+      donate_priority();
+    }
   }
 
   sema_down (&lock->semaphore);
@@ -247,8 +249,10 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
 
-  remove_lock(lock);
-  update_priority();
+  if (!thread_mlfqs){
+    remove_lock(lock);
+    update_priority();
+  }
 
   sema_up (&lock->semaphore);
 }
