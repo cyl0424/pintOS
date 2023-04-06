@@ -18,14 +18,6 @@
      : Add the code to initialize the sleep queue data structure.
 
      
-- **Modify timer_sleep() function.** (devices/timer.c) <br>
-     : Call the function that insert thread to the sleep queue.
-
-     
-- **Modify timer_interrupt() function.** (devices/timer.c) <br>
-     : At every tick, check whether some thread must wake up from sleep queue and call wake up function.
-
-     
 - **Add thread_sleep() function.**  (threads/thread.c) <br>
      : Set thread state to blocked and wait after insert it to sleep queue.
 
@@ -34,12 +26,20 @@
      : Find the thread to wake up from sleep queue and wake up it.
 
      
-- **Add save_mintick function.**  (threads/thread.c) <br>
-     : Save the minimum calue of tick that threads have.
+- **Add save_mintick() function.**  (threads/thread.c) <br>
+     : Save the minimum value of tick that threads have.
 
      
-- **Add return_mintick function.**  (threads/thread.c) <br>
+- **Add return_mintick() function.**  (threads/thread.c) <br>
      : Return the minimum value of tick.
+     
+     
+- **Modify timer_sleep() function.** (devices/timer.c) <br>
+     : Call the function that insert thread to the sleep queue.
+
+     
+- **Modify timer_interrupt() function.** (devices/timer.c) <br>
+     : At every tick, check whether some thread must wake up from sleep queue and call wake up function.
 
 
 <br>
@@ -169,7 +169,7 @@ thread_wakeup(int64_t ticks){
     }
     else{
       e = list_next(e);
-      save_mintick(ticks);
+      save_mintick(t->wakeup_tick);
     }
   }
   intr_set_level(old_level);
@@ -202,16 +202,7 @@ thread_wakeup(int64_t ticks){
 
 <br>
 
-``` C
-int64_t
-return_mintick(void){
-  return next_tick_to_wakeup;
-}
-```
-> - thread가 가진 tick 중 가장 작은 tick을 나타내는 next_tick_to_wakeup 변수를 반환함
-
-<br>
-
+#### To-do 5. Add save_mintick() function.  (threads/thread.c)
 ```C
 void
 save_mintick(int64_t ticks){
@@ -220,11 +211,25 @@ save_mintick(int64_t ticks){
   }
 }
 ```
-> - thread가 가진 tick 중 가장 작은 tick을 나타내는 next_tick_to_wakeup 변수를 저장함
+> **Create a function 'save_mintick()'** <br>
+> - save_mintick(void) : if the currently being traversaled thread 't's 'wakeup_tick' is smaller than the current 'next_tick_to_wakeup', update it to be the former value so that it can have the minimum value of local ticks of threads in 'sleep_list' have
+
+<br>
+
+#### To-do 6. Add return_mintick() function.  (threads/thread.c)
+``` C
+int64_t
+return_mintick(void){
+  return next_tick_to_wakeup;
+}
+```
+> **Create a function 'return_mintick()'** <br>
+> - return_mintick(void) : return 'next_tick_to_wakeup', which is the minimal tick between 'wakeup_tick' of threads in 'sleep_list'
 
 <br>
 
 ### - timer.c
+#### To-do 7. Modify timer_sleep() function.  (devices/timer.c)
 ```C
 void
 timer_sleep (int64_t ticks) 
@@ -235,6 +240,7 @@ timer_sleep (int64_t ticks)
   thread_sleep(start+ticks);
 }
 ```
+> **Delete while clause, call 'thread_sleep()' instead** <br>
 > - Busy waiting을 방지하기 위해 기존 while문을 제거하고, thread_sleep() 함수를 호출함
 
 <br>
