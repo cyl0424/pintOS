@@ -85,8 +85,8 @@ static struct list sleep_list;
 static int64_t next_tick_to_wakeup;
 ```
 > **Define a list struct 'sleep_list' and int64 type 'next_tick_to_wakeup'** <br>
-> - •sleep_list : a queue to store blocked threads until its time to wake them up <br>
-> - •next_tick_to_wakeup : the minimum value of tick that threads have 
+> - sleep_list : a queue to store blocked threads until its time to wake them up <br>
+> - next_tick_to_wakeup : the minimum value of tick that threads have 
 
 <br>
 
@@ -104,7 +104,7 @@ thread_init (void) {
 ```
 > **Initialize the sleep queue using list_init** <br>
 > **Initialize next_tick_to_wakeup to be INT64_MAX** <br>
-> - so that whenever there is any other ticks smaller than current, it can be updated to be the smaller one.
+>  so that whenever there is any other ticks smaller than current, it can be updated to be the smaller one.
 
 <br>
 
@@ -130,21 +130,21 @@ thread_sleep(int64_t ticks){
 }
 ```
 > **Create a function 'thread_sleep()'** <br>
-> - •thread_sleep(int64_t ticks) : It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
-> - - <span style="color:orange"> interrupts turn off </span>
-> - - **Call ASSERT(current != idle_thread)** <br>
-> - - - because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
-> - - **Add variable 'current' and save local tick** <br>
-> - - - •current : currently running thread <br>
-> - - - •current->wakeup_tick : set to be 'ticks', parameter received from 'thread_sleep()', value of (timer ticks+system tick) <br>
-> - - **Call 'save_minticks()'** <br>
-> - - - to update the value of minimum tick that threads have <br>
-> - - - •save_minticks() : newly created function. Will be described below <br>
-> - - **Call 'list_push_back()'** <br>
-> - - - to put the current thread into the sleep queue <br>
-> - - **Call 'thread_block()'** <br>
-> - - - to set the status of the current thread to be 'THREAD_BLOCKED'
-> - - <span style="color:orange"> interrupts turn on </span>
+> - thread_sleep(int64_t ticks) : It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
+>  - <span style="color:orange"> interrupts turn off </span>
+>  - **Call ASSERT(current != idle_thread)** <br>
+>   - because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
+>  - **Add variable 'current' and save local tick** <br>
+>   - current : currently running thread <br>
+>   - current->wakeup_tick : set to be 'ticks', parameter received from 'thread_sleep()', value of (timer ticks+system tick) <br>
+>  - **Call 'save_minticks()'** <br>
+>    to update the value of minimum tick that threads have <br>
+>    save_minticks() : newly created function. Will be described below <br>
+>  - **Call 'list_push_back()'** <br>
+>   - to put the current thread into the sleep queue <br>
+>  - **Call 'thread_block()'** <br>
+>   - to set the status of the current thread to be 'THREAD_BLOCKED'
+>  - <span style="color:orange"> interrupts turn on </span>
 
 <br>
 
