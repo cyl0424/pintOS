@@ -450,6 +450,7 @@ remove_lock(struct lock *lock){
 <br>
 
 #### - thread.c
+#### To-do 5. Modify init_thread() function. (threads/thread.c)
 ``` C
 static void
 init_thread (struct thread *t, const char *name, int priority)
@@ -466,7 +467,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
 }
 ```
-> thread.h에서 새로 정의한 변수와 리스트를 초기화함.
+> **Initiate variables and list created in thread.h**
 
 <br>
 
