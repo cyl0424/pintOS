@@ -433,18 +433,18 @@ remove_lock(struct lock *lock){
 }
 ```
 > **Create 'remove_lock()' function**
-> - **Add thread sturct '\*cur'** <br>
-> - - \*cur : point currently running thread <br>
-> - **Add list_elem struct '\*e'** <br>
-> - - \*e : point threads in the currently running thread's donation list, which are waiting for the lock that currently running thread is holding <br>
-> - - **Traversal 'donation_list'** <br>
->       - - - while(e != list_tail(&cur->donation_list)) : traversal 'donation_list' from the first to end element <br>
->       - - - e : list element that is currently being traversaled. <br>
->       - - t : thread that is currently being traversaled <br>
->       - - if (t-> waiting_lock == lock) : if a lock 't' is waiting for is same with the lock that is about to be released <br>
->	    remove 'e' from 'donation_list' and set 'e' to be the next thread in the queue <br>
->	- - else : <br>
->	    move to the next element without removing current one from the list <br>
+>   - **Add thread sturct '\*cur'** <br>
+>     - \*cur : point currently running thread <br>
+>   - **Add list_elem struct '\*e'** <br>
+>     - \*e : point threads in the currently running thread's donation list, which are waiting for the lock that currently running thread is holding <br>
+>   - **Traversal 'donation_list'** <br>
+>     - while(e != list_tail(&cur->donation_list)) : traversal 'donation_list' from the first to end element <br>
+>     - e : list element that is currently being traversaled. <br>
+>     - t : thread that is currently being traversaled <br>
+>     - if (t-> waiting_lock == lock) : if a lock 't' is waiting for is same with the lock that is about to be released <br>
+>	remove 'e' from 'donation_list' and set 'e' to be the next thread in the queue <br>
+>.    - else : <br>
+>	move to the next element without removing current one from the list <br>
 
 
 <br>
