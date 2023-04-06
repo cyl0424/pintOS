@@ -28,7 +28,7 @@
 ### 3) Project Description
 
 ### - thread.h
-### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.*)
+#### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.*)
 ``` C
 ...
 
@@ -183,7 +183,7 @@ thread_yield (void)
 <br>
 
 ### 3) Project Description
-#### - synch.h
+### - synch.h
 
 ##### To-do 1. Add cmp_sema_priority() function. (threads/synch.h)
 
@@ -198,7 +198,7 @@ bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, voi
 
 <br>
 
-#### - synch.c
+### - synch.c
 
 ``` C
 bool
@@ -225,7 +225,7 @@ cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *au
 
 <br>
 
-##### To-do 2. Modify cond_signal () function. (threads/synch.c)
+#### To-do 2. Modify cond_signal () function. (threads/synch.c)
 
 ``` C
 void
@@ -247,7 +247,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
 
 <br>
 
-##### To-do 3. Modify cond_wait () function. (threads/synch.c)
+#### To-do 3. Modify cond_wait () function. (threads/synch.c)
 
 ``` C
 void
@@ -271,7 +271,7 @@ cond_wait (struct condition *cond, struct lock *lock)
 
 <br>
 
-##### To-do 4. Modify sema_down () function. (threads/synch.c)
+#### To-do 4. Modify sema_down () function. (threads/synch.c)
 
 ``` C
 void
@@ -320,7 +320,7 @@ sema_down (struct semaohore *sema)
 <br>
 
 ### 3) Project Description
-#### - thread.h
+### - thread.h
 #### To-do 1. Modify thread structure (threads/thread.h)
 
 ``` C
@@ -449,7 +449,7 @@ remove_lock(struct lock *lock){
 
 <br>
 
-#### - thread.c
+### - thread.c
 #### To-do 5. Modify init_thread() function. (threads/thread.c)
 ``` C
 static void
@@ -492,15 +492,17 @@ thread_set_priority (int new_priority)
 
 <br>
 
-#### - synch.h
+### - synch.h
+#### To-do 7. Modify synch.h. (threads/synch.h)
 ```C
 bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux);
 ```
-> Declare cmp_donation_priority() function.
+> **Declare cmp_donation_priority() function created in synch.c**
 
 <br>
 
-#### - synch.c
+### - synch.c
+
 ```C
 void
 lock_acquire (struct lock *lock)
