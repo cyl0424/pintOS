@@ -471,6 +471,8 @@ init_thread (struct thread *t, const char *name, int priority)
 
 <br>
 
+#### To-do 6. Modify thread_set_priority() function. (threads/thread.c)
+
 ``` C
 void
 thread_set_priority (int new_priority) 
@@ -482,22 +484,39 @@ thread_set_priority (int new_priority)
   check_max_priority();
 }
 ```
-> - original_priority값을 new_priority로 선언함
-> - thread의 priority 변수값을 donation_list 첫번째 요소의 priority와 비교하여 update하도록 update_priority() 함수를 사용함.
-
-
-
+> - This function changes priority of the current thread to new_priority <br> 
+> 	- Set the current thread's priority and original priority to new_priority. <br>
+> 	- **update_priority()**: Inherit compared to the newly changed priority and the priority of the first element of the donation_list. <br>
+> 	- **check_max_priority()**: Execute 'thread_yield()' only if the priority of the first thread on the ready_list is greater than the newly changed priority.
 
 
 
 <br>
 
 ### - synch.h
-#### To-do 7. Modify synch.h. (threads/synch.h)
+#### To-do 7. Add 'cmp_donation_priority()' in synch.h. (threads/synch.h)
 ```C
 bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux);
 ```
 > **Declare cmp_donation_priority() function created in synch.c**
+
+<br>
+
+### - synch.c
+
+```C
+bool
+cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED)
+{
+  return list_entry (max_pri, struct thread, donation_elem) -> priority > list_entry (current_pri, struct thread, donation_elem)-> priority;
+}
+```
+> **Create a function 'cmp_donation_priority()'**
+> - **bool cmp_priority(const struct list_elem \*max_pri, const struct list_elem \*current_pri, void \*aux UNUSED)** : This function returns a True only if the priority of the first thread on the donation_list is greater than the priority of the current running thread
+>   - **list_entry (max_pri, struct thread, donation_elem) -> priority** <br>
+>      to get the priority of thread located at the first of the donation_list <br>
+>    - **list_entry(current_pri, struct thread, donation_elem) -> priority** <br>
+>      to get the priority of running thread <br>
 
 <br>
 
@@ -559,13 +578,4 @@ lock_release (struct lock *lock)
 
 <br>
 
-```C
-bool
-cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED)
-{
-  return list_entry (max_pri, struct thread, donation_elem) -> priority > list_entry (current_pri, struct thread, donation_elem)-> priority;
-}
-```
-> donation_elem의 priority를 비교하는 함수를 추가함.
 
-<br>
