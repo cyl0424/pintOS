@@ -131,7 +131,7 @@ thread_sleep(int64_t ticks){
 ```
 > **Create a function 'thread_sleep()'** <br>
 > - thread_sleep(int64_t ticks) : It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue. <br>
->   - <span style="color:orange"> interrupts turn off </span>
+>   - <span style="color:red"> interrupts turn off </span>
 >   - **Call ASSERT(current != idle_thread)** <br>
 >     because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
 >   - **Add variable 'current' and save local tick** <br>
