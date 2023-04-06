@@ -15,16 +15,15 @@
      
 
 - **Add check_max_priority() function.** (threads/thread.c) <br>
-     : 
+     :  Compare the priority and run the 'thread_yield ()' depending on the condition.
 
   
-
 <br>
 
 ### 3) Project Description
 
 #### - thread.h
-##### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.h)
+#### To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.h)
 ``` C
 ...
 
@@ -33,7 +32,7 @@ void check_max_priority(void);
 
 ...
 ```
-> **Declare cmp_priority(), check_max_priority() functions in 'thread.h' we newky created in 'thread.c'. Will be described below**
+> **Declare cmp_priority(), check_max_priority() functions in 'thread.h' we newly created in 'thread.c'. Will be described below**
 
 <br>
 
@@ -44,7 +43,7 @@ cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pr
 }
 ```
 > **Create a function 'cmp_priority()'**
-> - **bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED)** : This function returns a True only if the priority of the first thread on the ready_list is greater than the priority of the current running thread
+> - **bool cmp_priority(const struct list_elem \*max_pri, const struct list_elem \*current_pri, void \*aux UNUSED)** : This function returns a True only if the priority of the first thread on the ready_list is greater than the priority of the current running thread
 >	- **list_entry (max_pri, struct thread, elem) -> priority** <br>
 >		to get the priority of thread located at the first of the ready_list <br>
 > 	- **list_entry(current_pri, struct thread, elem) -> priority** <br>
@@ -66,12 +65,16 @@ check_max_priority(void){
 ```
 > **Create a function 'check_max_priority(void)'**
 > - **check_max_priority(void)** : This function execute 'thread_yield()' only if the priority of the first thread on the ready_list is greater than the priority of the current running thread.
-> 	- 
+> 	- **if (!list_empty(&ready_list))**: if the ready list is not empty, <br>
+>		- cur: currently running thread
+>		- next: thread located at the first of the ready_list <br>
+>	- **if (next->priority > cur->priority)**: if the priority of the first thread on the ready_list is greater than the priority of the current running thread <br>
+> 		- execute 'thread_yield()': This function changes the state of the running thread to 'THREAD_READY' and inserts the running thread into ready list.
 
 <br>
 
 #### - thread.c
-
+#### To-do 2. Modify thread_create() function. (threads/thread.c)
 ``` C
 tid_t
 thread_create (const char *name, int priority,
@@ -79,16 +82,19 @@ thread_create (const char *name, int priority,
 {
   ...
 
-  thread_unblock (t);
-  check_max_priority();
+  check_max_priority(); 
 
   return tid;
 
   ...
 }
+```
+> **Call 'check_max_priority()' function** <br>
+> 	- To compare with the priority of new thread and running thread when creating a new thread.
 
-...
+##### To-do 3. Modify thread_set_priority() function. (threads/thread.c)
 
+``` C
 void
 thread_set_priority (int new_priority) 
 {
@@ -96,10 +102,12 @@ thread_set_priority (int new_priority)
   check_max_priority();
 }
 ```
-> priority를 비교해 yield 할 수 있도록 하는 코드를 추가함.
+> **Call 'check_max_priority()' function** <br>
+> 	- To compare with the priority of new thread and running thread when changing a new thread.
 
 <br>
 
+#### To-do 4. Modify thread_unblock() function. (threads/thread.c)
 ``` C
 void
 thread_unblock (struct thread *t) 
@@ -114,9 +122,16 @@ thread_unblock (struct thread *t)
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
+```
+> **Remove 'list_push_back ()' function** <br>
+> 	- to consider the priority.
+> **Add 'list_insert_ordered ()' function** <br>
+> 	- **list_insert_ordered(&read_list, &t -> elem, cmp_priority, NULL)**: This function sorts ready_list in descending order through the cmp_priority() function.
+<br>
 
-...
+#### To-do 5. Modify 'thread_yield ()' function. (threads/thread.c)
 
+```C
 void
 thread_yield (void) 
 {
@@ -134,11 +149,12 @@ thread_yield (void)
   intr_set_level (old_level);
 }
 ```
-> priority에 따라 ready_list에 추가되도록 list_push_back() 대신 list_insert_ordered()를 사용함.
-
+> **Remove 'list_push_back ()' function** <br>
+> 	- To consider the priority. <br>
+>
+> **Add 'list_insert_ordered ()' function** <br>
+> 	- **list_insert_ordered(&read_list, &t -> elem, cmp_priority, NULL)**: This function sorts ready_list in descending order through the cmp_priority() function.
 <br>
-
-
 
 <br>
 
