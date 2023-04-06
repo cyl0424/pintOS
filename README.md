@@ -400,7 +400,7 @@ void donate_priority(void)
 	count++;
         if (count > 8 || holder->waiting_lock == NULL)
 	    break;
-	    holder = holder->waiting_lock->holder;
+	holder = holder->waiting_lock->holder;
     }
 }
 ```
