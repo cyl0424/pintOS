@@ -404,6 +404,13 @@ void donate_priority(void)
   }
 }
 ```
+> **Add thread struct variable '\*holder'** <br>
+>   - \*holder : holder of the lock that currently running thread is waiting for <br>
+> **Add int type variable 'depth' and initialize to be 0** <br>
+>   - depth : 
+> ** <br>
+> - - holder->priority = thread_current()->priority : set holder's priority to be the current thread's priority
+>
 <br>
 
 #### To-do 4. Add remove_lock() function. (threads/thread.c)
@@ -425,7 +432,18 @@ remove_lock(struct lock *lock){
   }
 }
 ```
-> 현재 쓰레드의 donation_list를 순회하며 donation_list 요소의 waiting_lock이 삭제하고자 하는 lock과 같다면 제거하는 함수를 추가함.
+> **Add thread sturct '\*cur'** <br>
+> - \*cur : point currently running thread <br>
+> **Add list_elem struct '\*e'** <br>
+> - \*e : point threads in the currently running thread's donation list, which are waiting for the lock that currently running thread is holding <br>
+> - **Traversal 'donation_list' <br>
+>       - while(e != list_tail(&cur->donation_list)) : traversal 'donation_list' from the first to end element <br>
+>       - e : list element that is currently being traversaled. <br>
+>       - t : thread that is currently being traversaled <br>
+>       - if (t-> waiting_lock == lock) : if a lock 't' is waiting for is same with the lock that is about to be released <br>
+>	  remove 'e' from 'donation_list' and set 'e' to be the next thread in the queue <br>
+>	- else : <br>
+>	  move to the next element without removing current one from the list <br>
 
 
 <br>
