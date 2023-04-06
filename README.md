@@ -40,13 +40,16 @@ void check_max_priority(void);
 > **Declare cmp_priority(), check_max_priority() functions in 'thread.h' we newly created in 'thread.c'. Will be described below**
 
 <br>
-#### - thread.c
-``` C
+
+#### - thread.c <br>
+
+```C
 bool
 cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
   return list_entry (max_pri, struct thread, elem) -> priority > list_entry (current_pri, struct thread, elem)-> priority;
 }
 ```
+
 > **Create a function 'cmp_priority()'**
 > - **bool cmp_priority(const struct list_elem \*max_pri, const struct list_elem \*current_pri, void \*aux UNUSED)** : This function returns a True only if the priority of the first thread on the ready_list is greater than the priority of the current running thread
 >	- **list_entry (max_pri, struct thread, elem) -> priority** <br>
@@ -96,6 +99,7 @@ thread_create (const char *name, int priority,
 ```
 > **Call 'check_max_priority()' function** <br>
 > 	- To compare with the priority of new thread and running thread when creating a new thread.
+<br>
 
 ##### To-do 3. Modify thread_set_priority() function. (threads/thread.c)
 
@@ -170,8 +174,10 @@ thread_yield (void)
 <br>
 
 ### 2) To-do
-- **Type** (threads/thread.h) <br>
-     : desc
+- **Add cmp_sema_priority() function. (threads/synch.h)** <br>
+- **Modify cond_signal () function. (threads/synch.c)** <br>
+- **Modify cond_wait () function. (threads/synch.c)** <br>
+- **Modify sema_down () function. (threads/synch.c)** <br>
 
 
 <br>
@@ -193,6 +199,7 @@ bool cmp_sema_priority(const struct list_elem *a, const struct list_elem *b, voi
 <br>
 
 #### - synch.c
+
 ``` C
 bool
 cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *aux UNUSED)
@@ -218,7 +225,7 @@ cmp_sema_priority(const struct list_elem *l, const struct list_elem *s, void *au
 
 <br>
 
-##### To-do 2. Modify sema_down () function. (threads/synch.c)
+##### To-do 2. Modify cond_signal () function. (threads/synch.c)
 
 ``` C
 void
@@ -239,6 +246,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
 >		- This function uses the 'cmp_sema_priority' function to sort the priorities in descending order. <br>
 
 <br>
+
 ##### To-do 3. Modify cond_wait () function. (threads/synch.c)
 
 ``` C
@@ -258,11 +266,12 @@ cond_wait (struct condition *cond, struct lock *lock)
 > **Remove list_push_back () function** <br>
 > 	- to consider priority. <br>
 > **Add 'list_insert_ordered() function.** <br>
-> 	- **list_insert_ordered(&cond -> waiters, &waiter.elem, cmp_sema_priority, NULL) <br>
+> 	- **list_insert_ordered(\&cond -> waiters, \&waiter.elem, cmp_sema_priority, NULL)** <br>
 > 		- When the condition is not satisfied, this function compares the priority of the thread in the existing waiters with the priority of the new thread and sorts it in descending order. <br>
 
 <br>
-##### Modify sema_down () function. (threads/synch.c)
+
+##### To-do 4. Modify sema_down () function. (threads/synch.c)
 
 ``` C
 void
@@ -282,8 +291,8 @@ sema_down (struct semaohore *sema)
 ```
 > **Remove list_push_back () function** <br>
 > 	- to consider priority. <br>
-> ** Add 'list_insert_ordered() function.** <br>
-> 	- **list_insert_ordered(&cond -> waiters, &waiter.elem, cmp_sema_priority, NULL) <br>
+> **Add 'list_insert_ordered() function.** <br>
+> 	- **list_insert_ordered(\&cond -> waiters, \&waiter.elem, cmp_sema_priority, NULL)** <br>
 > 		- When the sema_down() function is called, the semaphore waiters must be rearranged. At this time, this function is rearranged considering the priority. <br>
 
 <br>
