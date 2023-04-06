@@ -131,7 +131,7 @@ thread_sleep(int64_t ticks){
 ```
 > **Create a function 'thread_sleep()'** <br>
 > - thread_sleep(int64_t ticks) : It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue <br>
->   - <span style="color:orange"> interrupts turn off </span> <br>
+>   - **<span style="color:orange"> interrupts turn off </span>** <br>
 >   - **Call ASSERT(current != idle_thread)** <br>
 >         because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
 >   - **Add variable 'current' and save local tick** <br>
@@ -145,7 +145,7 @@ thread_sleep(int64_t ticks){
 >   - **Call 'thread_block()'** <br>
 >         to set the status of the current thread to be 'THREAD_BLOCKED' <br>
 >       - thread_block() : newly created function. Will be described below <br>
->   - <span style="color:orange"> interrupts turn on </span>
+>   - **<span style="color:orange"> interrupts turn on </span>**
 
 <br>
 
@@ -178,27 +178,27 @@ thread_wakeup(int64_t ticks){
 > **Create a function 'thread_wakeup()'** <br>
 > - thread_wakeup(int64_t ticks) : <br>
 >   It is called whenever a thread need to wake up, that is, need to be unblocked and removed from sleep queue <br>
->   **Declare list_elem struct variable '\*e'** <br>
->     - \*e : to point the list element of the sleep queue <br>
->   **Declare thread struct variable '\*t'** <br>
->     - \*t : to point the thread structure of currently being traversaled 'e' in the sleep queue <br>
->   **Turn interrupt off.** <br>
->   **Allocate INT64_MAX to 'next_tick_to_wakeup'** <br>
->   set the value of next_tick_to_wakeup to be INT64_MAX, so that whenever there is any smaller ticks, it can be updated. <br>
->   **Traversal sleep queue and wake up thread** <br>
->     - while(e != list_end(&sleep_list)) : traversal 'sleep_list' from the first to end element <br>
->     - e : list element that is currently being traversaled. <br>
->     - t : thread that is currently being traversaled <br>
->     - if (t-> wakeup_tick <= ticks) : if there is any thread whose 'wakeup_tick'(tick when to wake up), is equal or smaller thant the current ticks <br>
->       **Remove 'e' from 'sleep_list'** <br>
->       **Call 'thread_unblock(t) to unblock the thread 't'** <br>
->       - thread_unblock() : newly created function. Will be described below <br>
->     - else : if it is not time for 't' to wake up <br>
->       **Move to the next sleeping thread** <br>
->       so that it can keep the traversal <br>
->       **Call 'save_mintick(ticks)' to update minimum ticks** <br>
->       - save_mintick() : newly created function. described below. <br>
->    **Turn interrupts on.**
+>   - **Declare list_elem struct variable '\*e'** <br>
+>       - \*e : to point the list element of the sleep queue <br>
+>   - **Declare thread struct variable '\*t'** <br>
+>       - \*t : to point the thread structure of currently being traversaled 'e' in the sleep queue <br>
+>   - **Turn interrupt off.** <br>
+>   - **Allocate INT64_MAX to 'next_tick_to_wakeup'** <br>
+>       set the value of next_tick_to_wakeup to be INT64_MAX, so that whenever there is any smaller ticks, it can be updated. <br>
+>   - **Traversal sleep queue and wake up thread** <br>
+>       - while(e != list_end(&sleep_list)) : traversal 'sleep_list' from the first to end element <br>
+>       - e : list element that is currently being traversaled. <br>
+>       - t : thread that is currently being traversaled <br>
+>       - if (t-> wakeup_tick <= ticks) : if there is any thread whose 'wakeup_tick'(tick when to wake up), is equal or smaller thant the current ticks <br>
+>       - **Remove 'e' from 'sleep_list'** <br>
+>       - **Call 'thread_unblock(t) to unblock the thread 't'** <br>
+>           - thread_unblock() : newly created function. Will be described below <br>
+>           - else : if it is not time for 't' to wake up <br>
+>       - **Move to the next sleeping thread** <br>
+>           so that it can keep the traversal <br>
+>       - **Call 'save_mintick(ticks)' to update minimum ticks** <br>
+>            - save_mintick() : newly created function. described below. <br>
+>    - **Turn interrupts on.**
 
 <br>
 
