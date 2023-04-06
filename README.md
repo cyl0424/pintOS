@@ -118,11 +118,11 @@ void donate_priority(void)
     }
 }
 ```
-> **Add thread struct variable '\*holder'** <br>
+> - **Add thread struct variable '\*holder'** <br>
 > 	- \*holder : holder of the lock that currently running thread is waiting for <br>
-> **Add int type variable 'count' and initialize to be 0** <br>
+> - **Add int type variable 'count' and initialize to be 0** <br>
 >  	- count : To check the number of threads inherited from multiple donation, and the maximum value is set to 8 by referring to the reference. (https://casys-kaist.github.io/pintos-kaist/project1/priority_scheduling.html) <br>
-> **Add a while statement to do the following actions only when the holder is not null**<br>
+> - **Add a while statement to do the following actions only when the holder is not null**<br>
 >  	- holder->priority = thread_current()->priority : set holder's priority to be the current thread's priority
 >  	- Increase the number of inherited threads and stop if the inherited threads are greater than 8.
 >  	- Change the holder to the lock holder that the holder of the holder waits for.
