@@ -263,8 +263,8 @@ cond_wait (struct condition *cond, struct lock *lock)
   lock_acquire (lock);
 }
 ```
-> **Remove list_push_back () function** <br>
-> 	- to consider priority. <br>
+> **Remove list_push_back () function** : to consider priority. <br>
+> <br>
 > **Add 'list_insert_ordered() function.** <br>
 > 	- **list_insert_ordered(\&cond -> waiters, \&waiter.elem, cmp_sema_priority, NULL)** <br>
 > 		- When the condition is not satisfied, this function compares the priority of the thread in the existing waiters with the priority of the new thread and sorts it in descending order. <br>
@@ -289,8 +289,8 @@ sema_down (struct semaohore *sema)
   ...
 }
 ```
-> **Remove list_push_back () function** <br>
-> 	- to consider priority. <br>
+> **Remove list_push_back () function**: to consider priority. <br>
+> <br>
 > **Add 'list_insert_ordered() function.** <br>
 > 	- **list_insert_ordered(\&cond -> waiters, \&waiter.elem, cmp_sema_priority, NULL)** <br>
 > 		- When the sema_down() function is called, the semaphore waiters must be rearranged. At this time, this function is rearranged considering the priority. <br>
