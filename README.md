@@ -24,7 +24,7 @@
 ### 3) Project Description
 
 #### - thread.h
-
+#####To-do 1. Add cmp_priority() and check_max_priority() function. (threads/thread.h)
 ``` C
 ...
 
@@ -33,7 +33,39 @@ void check_max_priority(void);
 
 ...
 ```
-> Declare cmp_priority(), check_max_priority() functions.
+> **Declare cmp_priority(), check_max_priority() functions in 'thread.h' we newky created in 'thread.c'. Will be described below**
+
+<br>
+
+``` C
+bool
+cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
+  return list_entry (max_pri, struct thread, elem) -> priority > list_entry (current_pri, struct thread, elem)-> priority;
+}
+```
+> **Create a function 'cmp_priority()'
+> - bool cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED) : This function returns a True only if the priority of the first thread on the ready_list is greater than the priority of the current running thread
+>	- **list_entry (max_pri, struct thread, elem) -> priority** <br>
+>		to get the priority of thread located at the first of the ready_list <br>
+> 	- **list_entry(current_pri, struct thread, elem) -> priority** <br>
+>		to get the priority of running thread <br>
+
+<br>
+
+``` C
+void
+check_max_priority(void){
+  if (!list_empty(&ready_list)){
+    struct thread *cur = thread_current();
+    struct thread *next = list_entry(list_begin(&ready_list), struct thread, elem);
+    if (next->priority > cur->priority){
+      thread_yield();
+    }
+  }
+}
+```
+> **Create a function 'cmp_priority()'
+> ready_list 첫번째에 위치한 thread의 priority와 현재 thread의 priority를 비교하여 ready_list에 위치한 thread의 priority가 더 클 경우에만 thread_yield()를 실행하도록 하는 함수를 추가함.
 
 <br>
 
@@ -105,31 +137,7 @@ thread_yield (void)
 
 <br>
 
-``` C
-bool
-cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
-  return list_entry (max_pri, struct thread, elem) -> priority > list_entry (current_pri, struct thread, elem)-> priority;
-}
-```
-> ready_list 첫번째에 위치한 thread의 priority와 현재 thread의 priority를 비교하여 ready_list에 위치한 thread의 priority가 더 클 경우에만 True 값을 반환하도록 하는 함수 추가함.
 
-<br>
-
-``` C
-void
-check_max_priority(void){
-  if (!list_empty(&ready_list)){
-    struct thread *cur = thread_current();
-    struct thread *next = list_entry(list_begin(&ready_list), struct thread, elem);
-    if (next->priority > cur->priority){
-      thread_yield();
-    }
-  }
-}
-```
-> ready_list 첫번째에 위치한 thread의 priority와 현재 thread의 priority를 비교하여 ready_list에 위치한 thread의 priority가 더 클 경우에만 thread_yield()를 실행하도록 하는 함수를 추가함.
-
-<br>
 
 <br>
 
