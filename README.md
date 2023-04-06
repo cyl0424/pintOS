@@ -338,13 +338,13 @@ struct thread {
 
 }
 ```
-> **Add int type field named 'original_priority' <br>
+> **Add int type field named 'original_priority'** <br>
 > 	- Save original priority - (in priority inheritance, to return to original priority) <br>
 > **Add lock pointer type field named 'waiting_lock'** <br>
-> 	- If the lock is not available, store address of the lock** <br>
+> 	- If the lock is not available, store address of the lock <br>
 > **Add list type field named 'donation_list'** <br>
 > **Add list_elem type field named 'donation_elem'** <br>
-> 	- to prepare multiple donation** <br>
+> 	- to prepare multiple donation <br>
 
 <br>
 
