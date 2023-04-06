@@ -264,7 +264,7 @@ thread_wakeup(int64_t ticks){
     }
     else{
       e = list_next(e);
-      save_mintick(ticks);
+      save_mintick(t-> wakeup_tick);
     }
   }
   intr_set_level(old_level);
