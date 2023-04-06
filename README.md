@@ -574,6 +574,7 @@ lock_acquire (struct lock *lock)
 
 ```C
 void
+#### To-do 9. Modify 'lock_release()' function. <threads/synch.c>
 lock_release (struct lock *lock) 
 {
   ASSERT (lock != NULL);
@@ -587,7 +588,10 @@ lock_release (struct lock *lock)
   sema_up (&lock->semaphore);
 }
 ```
-> waiting_lock에서 lock을 삭제하고 thread_current()의 priority를 update 할 수 있도록 코드를 수정함.
+> - **Call 'remove_lock()' function** <br>
+>   to release the 'lock', check if there is any thread waiting for it and give it to that thread <br>
+> - **Call 'update_priority()' function** <br>
+>   update priority since there may be change in 'donation_list' after calling 'remove_lock()' if there was any thread waiting for the lock <br>
 
 <br>
 
