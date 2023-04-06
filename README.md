@@ -570,10 +570,9 @@ lock_acquire (struct lock *lock)
 > - **Set 'holder' of 'lock' to be the currently running thread** <br>
 
 <br>
-
+#### To-do 9. Modify 'lock_release()' function. <threads/synch.c>
 ```C
 void
-#### To-do 9. Modify 'lock_release()' function. <threads/synch.c>
 lock_release (struct lock *lock) 
 {
   ASSERT (lock != NULL);
