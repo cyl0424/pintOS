@@ -144,7 +144,7 @@ thread_sleep(int64_t ticks){
 >         to put the current thread into the sleep queue <br>
 >   - **Call 'thread_block()'** <br>
 >         to set the status of the current thread to be 'THREAD_BLOCKED' <br>
->   - **<span style="color:orange">interrupts turn on</span>**
+>   - <span style="color:orange"> interrupts turn on </span>
 
 <br>
 
