@@ -93,218 +93,421 @@
 
 ## Project Description
 
-### - thread.h
-#### To-do 1. Modify thread structure. (threads/thread.h)
+### To-do 1. Add fixed-point.h File. (threads/fixed-point.h, threads/thread.c)
+#### - fixed-point.h
 
 ``` C
-struct thread {
+#include <stdint.h>
 
-  ...
+#define F (1 << 14)
+#define INT_MAX ((1 << 31) - 1)
+#define INT_MIN (-(1 << 31))
 
-  /* local tick till wake up */
-  int64_t wakeup_tick;
-  
-  ...
+int int_to_fixed_point(int n);
+int fixed_point_to_int(int x);
+int fixed_point_to_int_round(int x);
 
+int add_fixed_point(int x, int y);
+int add_mixed(int x, int n);
+
+int sub_fixed_point(int x, int y);
+int sub_mixed(int x, int n);
+
+int mult_fixed_point(int x, int y);
+int mult_mixed(int x, int y);
+
+int div_fixed_point(int x, int y);
+int div_mixed(int x, int n);
+
+
+int int_to_fixed_point(int n) {
+    return n * F;
 }
-```
-> **Add int64_t type field named 'wakeup_tick'to thread structure** <br>
-> - •wakeup_tick : the value of (its timer ticks + system ticks)
 
-<br>
-
-```C
-void thread_sleep(int64_t ticks);
-void thread_wakeup(int64_t ticks);
-void save_mintick(int64_t ticks);
-int64_t return_mintick(void);
-```
-> **Declare the functions in 'thread.h' we newly creadted in 'thread.c'** <br>
-
-<br>
-
-### - thread.c
-#### To-do 2. Modify thread_init() function. (threads/thread.c)
-``` C
-/* project 1 : the list to control blocked thread */
-static struct list sleep_list;
-static int64_t next_tick_to_wakeup;
-```
-> **Define a list struct 'sleep_list' and int64 type 'next_tick_to_wakeup'** <br>
-> - sleep_list : a queue to store blocked threads until its time to wake them up <br>
-> - next_tick_to_wakeup : the minimum value of tick that threads have 
-
-<br>
-
-```C
-void
-thread_init (void) {
-  ...
-  
-  /* project 1 : init blocked_list and next_to_wakeup */
-  list_init (&sleep_list);
-  next_tick_to_wakeup = INT64_MAX;
-  
-  ...
+int fixed_point_to_int(int x) {
+    return x / F;
 }
-```
-> **Initialize the sleep queue using list_init** <br>
-> **Initialize next_tick_to_wakeup to be INT64_MAX** <br>
->  so that whenever there is any other ticks smaller than current, it can be updated to be the smaller one.
 
-<br>
-
-#### To-do 3. Add thread_sleep() function.  (threads/thread.c)
-```C
-void
-thread_sleep(int64_t ticks){
-  struct thread *current;
-  enum intr_level old_level;
-
-  old_level = intr_disable();
-  current = thread_current();
-
-  ASSERT(current != idle_thread);
-
-  current -> wakeup_tick = ticks;
-  save_mintick(ticks);
-  
-  list_push_back (&sleep_list, &current -> elem);
-  thread_block();
-  
-  intr_set_level(old_level);
-}
-```
-> **Create a function 'thread_sleep()'** <br>
-> - void thread_sleep(int64_t ticks) : It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue <br>
->   - **Turn interrupts off**
->   - **Call ASSERT(current != idle_thread)** <br>
->         because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
->   - **Add variable 'current' and save local tick** <br>
->       - current : currently running thread <br>
->       - current->wakeup_tick : set to be 'ticks', parameter received from 'thread_sleep()', value of (timer ticks+system tick) <br>
->   - **Call 'save_minticks()'** <br>
->         to update the value of minimum tick that threads have <br>
->       - void save_minticks(int64_t ticks) : newly created function. Will be described below <br>
->   - **Call 'list_push_back()'** <br>
->         to put the current thread into the sleep queue <br>
->   - **Call 'thread_block()'** <br>
->         to set the status of the current thread to be 'THREAD_BLOCKED' <br>
->   - **Turn interrupts on**
-
-<br>
-
-#### To-do 4. Add thread_wakeup() function.  (threads/thread.c)
-```C
-void
-thread_wakeup(int64_t ticks){
-  struct list_elem *e = list_begin(&sleep_list);
-  struct thread *t;
-  enum intr_level old_level;
-
-  old_level = intr_disable();
-  next_tick_to_wakeup = INT64_MAX;
-
-  while(e != list_end(&sleep_list)){
-    t = list_entry(e, struct thread, elem);
-  
-    if (t-> wakeup_tick <= ticks){
-      e = list_remove(e);
-      thread_unblock(t);
+int fixed_point_to_int_round(int x) {
+    if (x >= 0) {
+        return (x + F / 2) / F;
+    } else {
+        return (x - F / 2) / F;
     }
-    else{
-      e = list_next(e);
-      save_mintick(t->wakeup_tick);
-    }
-  }
-  intr_set_level(old_level);
+}
+
+int add_fixed_point(int x, int y) {
+    return x + y;
+}
+
+int add_mixed(int x, int n) {
+    return x + n * F;
+}
+
+int sub_fixed_point(int x, int y) {
+    return x - y;
+}
+
+int sub_mixed(int x, int n) {
+    return x - n * F;
+}
+
+int mult_fixed_point(int x, int y) {
+    return ((int64_t)x) * y / F;
+}
+
+int mult_mixed(int x, int n) {
+    return x * n;
+}
+
+int div_fixed_point(int x, int y) {
+    return ((int64_t)x) * F / y;
+}
+
+int div_mixed(int x, int n) {
+    return x / n;
 }
 ```
-> **Create a function 'thread_wakeup()'** <br>
-> - void thread_wakeup(int64_t ticks) : <br>
->   It is called whenever a thread need to wake up, that is, need to be unblocked and removed from sleep queue <br>
->   - **Declare list_elem struct variable '\*e'** <br>
->       - \*e : to point the list element of the sleep queue <br>
->   - **Declare thread struct variable '\*t'** <br>
->       - \*t : to point the thread structure of currently being traversaled 'e' in the sleep queue <br>
->   - **Turn interrupt off.** <br>
->   - **Allocate INT64_MAX to 'next_tick_to_wakeup'** <br>
->       set the value of next_tick_to_wakeup to be INT64_MAX, so that whenever there is any smaller ticks, it can be updated. <br>
->   - **Traversal sleep queue and wake up thread** <br>
->       - while(e != list_end(&sleep_list)) : traversal 'sleep_list' from the first to end element <br>
->       - e : list element that is currently being traversaled. <br>
->       - t : thread that is currently being traversaled <br>
->       - if (t-> wakeup_tick <= ticks) : if there is any thread whose 'wakeup_tick'(tick when to wake up), is equal or smaller than the current ticks <br>
->         - **Remove 'e' from 'sleep_list'** <br>
->         - **Call 'thread_unblock() to unblock the thread 't'** <br>
->       - else : if it is not time for 't' to wake up <br>
->         - **Move to the next sleeping thread** <br>
->           so that it can keep the traversal <br>
->         - **Call 'save_mintick(ticks)' to update minimum ticks** <br>
->            - void save_mintick(int64_t ticks) : newly created function. described below. <br>
->    - **Turn interrupts on.**
+> **Adds a file with a function defined for floating point operations within pintOS.** <br>
+> - Created according to the instructions in the following link.
+>    https://web.stanford.edu/class/cs140/projects/pintos/pintos_7.html#SEC131
 
 <br>
 
-#### To-do 5. Add save_mintick() function.  (threads/thread.c)
-```C
-void
-save_mintick(int64_t ticks){
-  if (ticks < next_tick_to_wakeup){
-    next_tick_to_wakeup = ticks;
-  }
-}
-```
-> **Create a function 'save_mintick()'** <br>
-> - void save_mintick(int64_t) : if the currently being traversaled thread 't's 'wakeup_tick' is smaller than the current 'next_tick_to_wakeup', update it to be the former value so that it can have the minimum value of local ticks of threads in 'sleep_list' have
-
-<br>
-
-#### To-do 6. Add return_mintick() function.  (threads/thread.c)
+#### - thread.h
 ``` C
-int64_t
-return_mintick(void){
-  return next_tick_to_wakeup;
-}
+...
+
+#include "threads/fixed-point.h"
+
+...
 ```
-> **Create a function 'return_mintick()'** <br>
-> - int64_t return_mintick(void) : return 'next_tick_to_wakeup', which is the minimal tick between 'wakeup_tick' of threads in 'sleep_list'
+> **Include the fixed-point.h file in thread.c.** <br>
 
 <br>
 
-### - timer.c
-#### To-do 7. Modify timer_sleep() function.  (devices/timer.c)
-```C
-void
-timer_sleep (int64_t ticks) 
+### To-do 2. Modify thread structure. (threads/thread.h)
+#### - thread.h
+``` C
+struct thread
 {
-  int64_t start = timer_ticks ();
+...
 
-  ASSERT (intr_get_level () == INTR_ON);
-  thread_sleep(start+ticks);
+    int nice;
+    int recent_cpu;
+
+...
 }
 ```
-> **Delete while clause, call 'thread_sleep()' instead** <br>
-> - thread_sleep(start+ticks) : call thread_sleep with the parameter of the sum of the current system tick and the number of ticks the thread should be sleeping, indicating when it should be waken up. -> the local tick of the thread, 'wakeup
+> **Add new int type fields for advanced scheduling.** <br>
 
 <br>
 
-#### To-do 8. Modify timer_interrupt() function.  (devices/timer.c)
+### To-do 3. Add mlfqs_update_priority() function.  (threads/thread.\*)
+#### - thread.c
+```C
+void mlfqs_update_priority (struct thread *t){
+// priority = PRI_MAX - (recent_cpu / 4) - (nice * 2)
+  if (t != idle_thread){
+    int a = (int) PRI_MAX;
+    int b = div_mixed(t->recent_cpu, -4);
+    int c = t->nice * (-2);
+    int d = a+c;
+    int result = fixed_point_to_int(add_mixed(b, d));
+
+    if (result > PRI_MAX){
+      result = PRI_MAX;
+    }else if (result < PRI_MIN){
+      result = PRI_MIN;
+    }
+
+    t->priority = result;
+  }
+}
+}
+```
+> **Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice * 2)** <br>
+
+<br>
+
+#### To-do 4.Add mlfqs_update_recent_cpu() function.  (threads/thread.c)
+#### - thread.c
+```C
+void mlfqs_update_recent_cpu (struct thread *t){
+// recent_cpu = (2*load_avg)/(2*load_avg + 1) * recent_cpu + nice
+  if (t != idle_thread){
+    int a = mult_mixed(load_avg, 2);
+    int b = add_mixed(a, 1);
+    int a_b = div_fixed_point(a, b);
+    int c = mult_fixed_point(a_b, t->recent_cpu);
+    
+    int result = add_mixed(c, t->nice);
+
+    if ((result >> 31) == (-1) >> 31){
+      result = 0;
+    }
+
+    t->recent_cpu = result;
+  }
+}
+```
+> **Calculate to change the recent_cpu to (2load_avg)/(2load_avg + 1) * recent_cpu + nice.** <br>
+
+<br>
+
+#### To-do 5. Add mlfqs_update_load_avg() function.  (threads/thread.c)
+#### - thread.c
+```C
+void mlfqs_update_load_avg (void){
+// load_avg = (59/60)*load_avg + (1/60)*ready_threads
+  int ready_threads = (int)list_size(&ready_list);
+  if (thread_current() != idle_thread){
+    ready_threads++;
+  }
+
+  int a = div_fixed_point(int_to_fixed_point(59), int_to_fixed_point(60));
+  int b = mult_fixed_point(a, load_avg);
+  int c = div_fixed_point(int_to_fixed_point(1), int_to_fixed_point(60));
+  int d = mult_mixed(c, ready_threads);
+  int result = add_fixed_point(b, d);
+
+  load_avg = result;
+}
+```
+> **Calculate to change load_avg to (59/60)\*load_avg + (1/60)\*ready_threads.** <br>
+
+<br>
+
+#### To-do 6. Add mlfqs_incre_recent_cpu() function.  (threads/thread.c)
+#### - thread.c
+``` C
+void mlfqs_incre_recent_cpu (void){
+  struct thread *cur = thread_current();
+
+  if (cur != idle_thread){
+    cur->recent_cpu = add_mixed(cur->recent_cpu, 1);
+  }
+}
+```
+> **Calculate to add 1 to the recent_cpu.** <br>
+
+<br>
+
+### To-do 7. Add mlfqs_update_priority_all() function.  (threads/thread.c)
+#### - thread.c
+```C
+void mlfqs_update_priority_all (void){
+  struct list_elem *e;
+
+  for (e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e))
+    {
+      mlfqs_update_priority(list_entry(e, struct thread, allelem));
+    }
+}
+```
+> **mlfqs_update_priority() function is for all_list's recent_cpu.** <br>
+
+<br>
+
+### To-do 8. Add mlfqs_update_recent_cpu_all() function.  (threads/thread.c)
+#### - thread.c
+```C
+void mlfqs_update_recent_cpu_all (void){
+  struct list_elem *e;
+
+  for (e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e))
+    {
+      mlfqs_update_recent_cpu(list_entry(e, struct thread, allelem));
+    }
+}
+```
+> **mlfqs_update_recent_priority() function is for all_list's priority.** <br>
+
+#### - thread.h
+```C
+...
+
+void mlfqs_update_priority (struct thread *);
+void mlfqs_update_recent_cpu (struct thread *);
+void mlfqs_update_load_avg (void);
+void mlfqs_incre_recent_cpu (void);
+void mlfqs_update_recent_cpu_all (void);
+void mlfqs_update_priority_all (void);
+
+...
+```
+> **Declare all the functions above to thread.h.** <br>
+
+<br>
+
+### To-do 9. Modify init_thread() function.  (threads/thread.c)
+#### - thread.c
+```C
+
+```
+
+
+<br>
+
+### To-do 10. Modify thread_set_priority() function.  (threads/thread.c)
+#### - thread.c
+```C
+void
+thread_set_priority (int new_priority) 
+{
+  if (!thread_mlfqs){
+    thread_current ()->priority = new_priority;
+    thread_current ()->original_priority = new_priority;
+    
+    update_priority();
+    check_max_priority();
+  }
+}
+```
+> ****
+
+<br>
+
+### To-do 11. Modify thread_set_nice() function.  (threads/thread.c)
+#### - thread.c
+```C
+void
+thread_set_nice (int nice UNUSED) 
+{
+  enum intr_level old_level;
+  old_level = intr_disable();
+  thread_current()->nice = nice;
+  mlfqs_update_priority(thread_current());
+  check_max_priority();
+  intr_set_level (old_level);
+}
+
+```
+> ****
+
+<br>
+
+### To-do 12. Modify thread_get_nice() function.  (threads/thread.c)
+#### - thread.c
+```C
+int
+thread_get_nice (void) 
+{
+  enum intr_level old_level;
+  old_level = intr_disable();
+  int result = thread_current()->nice;
+  intr_set_level (old_level);
+  return result;
+}
+
+```
+> ****
+
+
+<br>
+
+### To-do 13. Modify thread_load_avg() function.  (threads/thread.c)
+#### - thread.c
+```C
+int
+thread_get_load_avg (void) 
+{
+  enum intr_level old_level;
+  old_level = intr_disable();
+  int result = fixed_point_to_int_round(mult_mixed(load_avg, 100));
+  intr_set_level (old_level);
+  return result;
+}
+
+```
+> ****
+
+<br>
+
+### To-do 14. Modify thread_get_recent_cpu() function.  (threads/thread.c)
+#### - thread.c
+```C
+int
+thread_get_recent_cpu (void) 
+{
+  enum intr_level old_level;
+  old_level = intr_disable();
+  int result = fixed_point_to_int_round(mult_mixed(thread_current()->recent_cpu, 100));
+  intr_set_level (old_level);
+  return result;
+}
+
+```
+> ****
+
+<br>
+
+### To-do 15. Modify lock_aquire() function.  (threads/synch.c)
+#### - synch.c
+```C
+void
+lock_acquire (struct lock *lock)
+{
+  ...
+    if (lock->holder != NULL){
+        cur->waiting_lock = lock;
+        list_insert_ordered(&lock->holder->donation_list, &cur->donation_elem, cmp_donation_priority, NULL);
+        donate_priority();
+    
+        if(!thread_mlfqs){
+          donate_priority();
+        }
+    }
+}
+```
+> ****
+
+<br>
+
+### To-do 16. Modify lock_release() function.  (threads/synch.c)
+#### - synch.c
+```C
+void
+lock_acquire (struct lock *lock)
+{
+    ...
+    
+    if (!thread_mlfqs){
+        remove_lock(lock);
+        update_priority();
+    }
+    
+   ...
+}
+```
+> ****
+
+<br>
+
+### To-do 17. Modify timer_interrupt() function.  (devices/timer.c)
+#### - timer.c
 ```C
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
-  ticks++;
-  thread_tick ();
-  
-  int64_t minTick = return_mintick();
+...
 
-  if (ticks >= minTick){
-    thread_wakeup(ticks);
-  }
+    if (thread_mlfqs){
+        mlfqs_incre_recent_cpu();
+        
+        if(timer_ticks() % 4 == 0){
+            mlfqs_update_priority_all();
 
+            if (timer_ticks() % 100 == 0){
+                mlfqs_update_load_avg();
+                mlfqs_update_recent_cpu_all();
+            }
+        }
+    }
+
+...
 }
 ```
-> **Add int64_t type 'minTick'**
-> - minTick : save the value of 'next_tick_to_wakeup', which is the minimum value of 'wakeup_tick' of theads in the 'sleep_list' so far.
-> - if (ticks >= minTick) : if the current ticks is equal or larger than the current minTick, wake up a thread that are needed to be.
+> ****
+
+<br>
