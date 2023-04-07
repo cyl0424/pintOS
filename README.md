@@ -399,7 +399,7 @@ void update_priority(void){
 
 <br>
 
-#### To-do 3. donate_priority() function. (threads/thread.c)
+#### To-do 3. Add donate_priority() function. (threads/thread.c)
 
 ```C
 void donate_priority(void)
