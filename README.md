@@ -522,7 +522,8 @@ bool cmp_donation_priority(const struct list_elem *max_pri, const struct list_el
 bool
 cmp_donation_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED)
 {
-  return list_entry (max_pri, struct thread, donation_elem) -> priority > list_entry (current_pri, struct thread, donation_elem)-> priority;
+  return list_entry (max_pri, struct thread, donation_elem) -> priority > 
+  list_entry (current_pri, struct thread, donation_elem)-> priority;
 }
 ```
 > **Create a function 'cmp_donation_priority()'**
