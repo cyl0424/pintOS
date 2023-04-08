@@ -46,7 +46,8 @@ void check_max_priority(void);
 ```C
 bool
 cmp_priority(const struct list_elem *max_pri, const struct list_elem *current_pri, void *aux UNUSED){
-  return list_entry (max_pri, struct thread, elem) -> priority > list_entry (current_pri, struct thread, elem)-> priority;
+  return list_entry (max_pri, struct thread, elem) -> priority > 
+  list_entry (current_pri, struct thread, elem)-> priority;
 }
 ```
 
