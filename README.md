@@ -52,10 +52,22 @@ tid_t process_execute (const char *file_name)
   return tid;
 }
 ```
-> **Adds a file with a function defined for floating point operations within pintOS.** <br>
-> - Created according to the instructions in the following link.
->    https://web.stanford.edu/class/cs140/projects/pintos/pintos_7.html#SEC131
-
+> **Parse the string of 'file_name'** <br>
+> - void thread_sleep(int64_t ticks) : It is called whenever a thread need to sleep, that is, need to be blocked and moved to sleep queue <br>
+>   - **Turn interrupts off**
+>   - **Call ASSERT(current != idle_thread)** <br>
+>         because if an idle thread is blocked, the cpu stops working so any idle thread should not be blocked. <br>
+>   - **Add variable 'current' and save local tick** <br>
+>       - current : currently running thread <br>
+>       - current->wakeup_tick : set to be 'ticks', parameter received from 'thread_sleep()', value of (timer ticks+system tick) <br>
+>   - **Call 'save_minticks()'** <br>
+>         to update the value of minimum tick that threads have <br>
+>       - void save_minticks(int64_t ticks) : newly created function. Will be described below <br>
+>   - **Call 'list_push_back()'** <br>
+>         to put the current thread into the sleep queue <br>
+>   - **Call 'thread_block()'** <br>
+>         to set the status of the current thread to be 'THREAD_BLOCKED' <br>
+>   - **Turn interrupts on**
 <br>
 
 ### To-do 2. Modify start_process() function.** (userprog/process.c)
