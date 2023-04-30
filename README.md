@@ -26,79 +26,29 @@
 
 ## Project Description
 
-### To-do 1. Add fixed-point.h File. (threads/fixed-point.h, threads/thread.c)
-#### - fixed-point.h
+### To-do 1. Modify process_execution() function. (userprog/process.c) <br>
 
 ``` C
-#include <stdint.h>
+process_execute (const char *file_name) 
+{
+  char *fn_copy;
+  tid_t tid;
 
-#define F (1 << 14)
-#define INT_MAX ((1 << 31) - 1)
-#define INT_MIN (-(1 << 31))
+  /* Make a copy of FILE_NAME.
+     Otherwise there's a race between the caller and load(). */
+  fn_copy = palloc_get_page (0);
+  if (fn_copy == NULL)
+    return TID_ERROR;
+  strlcpy (fn_copy, file_name, PGSIZE);
 
-int int_to_fixed_point(int n);
-int fixed_point_to_int(int x);
-int fixed_point_to_int_round(int x);
+  char *save_ptr;
+  char *token = strtok_r(file_name, " ", &save_ptr);
 
-int add_fixed_point(int x, int y);
-int add_mixed(int x, int n);
-
-int sub_fixed_point(int x, int y);
-int sub_mixed(int x, int n);
-
-int mult_fixed_point(int x, int y);
-int mult_mixed(int x, int y);
-
-int div_fixed_point(int x, int y);
-int div_mixed(int x, int n);
-
-
-int int_to_fixed_point(int n) {
-    return n * F;
-}
-
-int fixed_point_to_int(int x) {
-    return x / F;
-}
-
-int fixed_point_to_int_round(int x) {
-    if (x >= 0) {
-        return (x + F / 2) / F;
-    } else {
-        return (x - F / 2) / F;
-    }
-}
-
-int add_fixed_point(int x, int y) {
-    return x + y;
-}
-
-int add_mixed(int x, int n) {
-    return x + n * F;
-}
-
-int sub_fixed_point(int x, int y) {
-    return x - y;
-}
-
-int sub_mixed(int x, int n) {
-    return x - n * F;
-}
-
-int mult_fixed_point(int x, int y) {
-    return ((int64_t)x) * y / F;
-}
-
-int mult_mixed(int x, int n) {
-    return x * n;
-}
-
-int div_fixed_point(int x, int y) {
-    return ((int64_t)x) * F / y;
-}
-
-int div_mixed(int x, int n) {
-    return x / n;
+  /* Create a new thread to execute FILE_NAME. */
+  tid = thread_create (token, PRI_DEFAULT, start_process, fn_copy);
+  if (tid == TID_ERROR)
+    palloc_free_page (fn_copy);
+  return tid;
 }
 ```
 > **Adds a file with a function defined for floating point operations within pintOS.** <br>
