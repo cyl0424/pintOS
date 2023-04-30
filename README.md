@@ -69,7 +69,7 @@ process_execute (const char *file_name)
 
 <br>
 
-### To-do 2. Modify thread structure. (threads/thread.h)
+### To-do 2. Modify start_process() function.** (userprog/process.c)
 #### - thread.h
 ``` C
 struct thread
@@ -86,7 +86,7 @@ struct thread
 
 <br>
 
-### To-do 3. Add mlfqs_update_priority() function.  (threads/thread.\*)
+### To-do 3. Add argument_user_stack() function.** (userprog/process.\*)
 #### - thread.c
 ```C
 void mlfqs_update_priority (struct thread *t){
