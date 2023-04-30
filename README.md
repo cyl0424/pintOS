@@ -29,7 +29,7 @@
 ### To-do 1. Modify process_execution() function. (userprog/process.c) <br>
 
 ``` C
-process_execute (const char *file_name) 
+tid_t process_execute (const char *file_name) 
 {
   char *fn_copy;
   tid_t tid;
@@ -70,16 +70,56 @@ process_execute (const char *file_name)
 <br>
 
 ### To-do 2. Modify start_process() function.** (userprog/process.c)
-#### - thread.h
 ``` C
-struct thread
+static void
+start_process (void *file_name_)
 {
-    ...
+  char *file_name = file_name_;
+  struct intr_frame if_;
+  bool success;
 
-    int nice;
-    int recent_cpu;
+  /* Initialize interrupt frame and load executable. */
+  memset (&if_, 0, sizeof if_);
+  if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
+  if_.cs = SEL_UCSEG;
+  if_.eflags = FLAG_IF | FLAG_MBS;
 
-    ...
+  char *argv[128];
+  char *save_ptr, *slicing;
+  char *tmp = file_name;
+  int cnt = 0;
+
+  while(true){
+    slicing = strtok_r(tmp, " ", &save_ptr);
+    argv[cnt] = slicing;
+    tmp = strtok_r(NULL, " ", &save_ptr);
+    cnt++;
+
+    if (tmp == NULL){
+      break;
+    }
+  }
+
+  char *file = argv[0];
+  success = load (file, &if_.eip, &if_.esp);
+
+  if(success){
+    argument_user_stack(argv, cnt, &if_.esp);
+    hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true);
+  }
+  /* If load failed, quit. */
+  palloc_free_page (file_name);
+  if (!success) 
+    thread_exit ();
+
+  /* Start the user process by simulating a return from an
+     interrupt, implemented by intr_exit (in
+     threads/intr-stubs.S).  Because intr_exit takes all of its
+     arguments on the stack in the form of a `struct intr_frame',
+     we just point the stack pointer (%esp) to our stack frame
+     and jump to it. */
+  asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
+  NOT_REACHED ();
 }
 ```
 > **Add new int type fields for advanced scheduling.** <br>
@@ -87,25 +127,45 @@ struct thread
 <br>
 
 ### To-do 3. Add argument_user_stack() function.** (userprog/process.\*)
-#### - thread.c
+#### - process.c
 ```C
-void mlfqs_update_priority (struct thread *t){
-// priority = PRI_MAX - (recent_cpu / 4) - (nice * 2)
-  if (t != idle_thread){
-    int a = (int) PRI_MAX;
-    int b = div_mixed(t->recent_cpu, -4);
-    int c = t->nice * (-2);
-    int d = a+c;
-    int result = fixed_point_to_int(add_mixed(b, d));
+void argument_user_stack(char **argv,int argc,void **esp){
+  char *argv_address[argc];
+  int length = 0;
 
-    if (result > PRI_MAX){
-      result = PRI_MAX;
-    }else if (result < PRI_MIN){
-      result = PRI_MIN;
-    }
+  int i;
 
-    t->priority = result;
+  for (i = argc -1; i >= 0; i--){
+    int instruction_size = strlen(argv[i])+1;
+    *esp -= instruction_size;
+    memcpy(*esp, argv[i], instruction_size);
+    length += instruction_size;
+    argv_address[i]=*esp;
   }
+
+  if (length % 4 != 0){
+    for (i = (4 - (length % 4)); i > 0; i--){
+      *esp -= 1;
+      **(char **)esp = 0;
+    }
+  }
+
+  *esp = *esp - 4;
+  **(char **)esp = 0;
+
+  for (i = argc -1; i >= 0; i--){
+    *esp -= 4;
+    memcpy(*esp, &argv_address[i], strlen(&argv_address[i]));
+  }
+
+  *esp = *esp - 4;
+  *(char **)(*esp) = (*esp+4);
+
+  *esp = *esp - 4;
+  **(char **)esp = argc; 
+
+  *esp = *esp - 4;
+  **(char **)esp = 0;                         
 }
 ```
 > **Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice * 2)** <br>
@@ -115,3 +175,13 @@ void mlfqs_update_priority (struct thread *t){
 > - priority should be int type. So, fixed_point_to_int() is used to convert float type to int type.
 
 <br>
+#### - process.h
+``` C
+...
+
+void argument_user_stack(char **agrv,int argc,void **esp);
+
+...
+```
+> **Declare the argument_user_stack() function in process.h.** <br>
+
