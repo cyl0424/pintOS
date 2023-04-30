@@ -54,10 +54,6 @@ void argument_user_stack(char **argv,int argc,void **esp){
 
   int i;
 
-  for(i = 0 ; i <2; i++){
-    printf("after passing: %s\n", argv[i]);
-  }
-
   for (i = argc -1; i >= 0; i--){
     int instruction_size = strlen(argv[i])+1;
     *esp -= instruction_size;
@@ -83,9 +79,6 @@ void argument_user_stack(char **argv,int argc,void **esp){
 
   *esp = *esp - 4;
   *(char **)(*esp) = (*esp+4);
-  // char *tmp = *esp+4;
-  // printf("esp+4: %p\n", tmp);
-  // memcpy(*esp, &tmp, strlen(&tmp));
 
   *esp = *esp - 4;
   **(char **)esp = argc; 
@@ -93,7 +86,6 @@ void argument_user_stack(char **argv,int argc,void **esp){
   *esp = *esp - 4;
   **(char **)esp = 0;                         
 
-  printf("esp: %p\n", *esp);
 }
 
 
@@ -117,15 +109,13 @@ start_process (void *file_name_)
   char *tmp = file_name;
   int cnt = 0;
 
-  while(true){
-    slicing = strtok_r(tmp, " ", &save_ptr);
-    argv[cnt] = slicing;
-    tmp = strtok_r(NULL, " ", &save_ptr);
-    cnt++;
+  slicing = strtok_r(tmp, " ", &save_ptr);
 
-    if (tmp == NULL){
-      break;
-    }
+  while(slicing != NULL){
+    argv[cnt] = slicing;
+    cnt++;
+    printf("slicing: %s\n", slicing);
+    slicing = strtok_r(NULL, " ", &save_ptr);
   }
   
   char *file = argv[0];
