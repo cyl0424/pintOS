@@ -9,16 +9,16 @@
 <br>
 
 ## To-do
-- **Add fixed-point.h File.** (threads/fixed-point.h) <br>
-     : Adds a file with a function defined for floating point operations within pintOS.
+- **Modify process_excution() function.** (userprog/process.c) <br>
+     : 
 
      
-- **Modify thread structure.** (threads/thread.h) <br>
-     : Add new int type fields for advanced scheduling.
+- **Modify start_process() function.** (userprog/process.c) <br>
+     : 
 
      
-- **Add mlfqs_update_priority() function.** (threads/thread.\*) <br>
-     : Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice * 2).
+- **Add argument_user_stack() function.** (userprog/process.\*) <br>
+     : 
      
 
 <br>
