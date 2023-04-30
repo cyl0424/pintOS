@@ -10,15 +10,15 @@
 
 ## To-do
 - **Modify process_excution() function.** (userprog/process.c) <br>
-     : 
+     : parse the string of file_name and forward the first token as the name of the new process to thread_create() function.
 
      
 - **Modify start_process() function.** (userprog/process.c) <br>
-     : 
+     : parse the string of file_name and save tokens in the user stack by calling argument_user_stack() function.
 
      
 - **Add argument_user_stack() function.** (userprog/process.\*) <br>
-     : 
+     : stack the arguments on the user stack.
      
 
 <br>
