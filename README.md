@@ -57,18 +57,6 @@ tid_t process_execute (const char *file_name)
 
 <br>
 
-#### - thread.h
-``` C
-...
-
-#include "threads/fixed-point.h"
-
-...
-```
-> **Include the fixed-point.h file in thread.c.** <br>
-
-<br>
-
 ### To-do 2. Modify start_process() function.** (userprog/process.c)
 ``` C
 static void
@@ -173,7 +161,6 @@ void argument_user_stack(char **argv,int argc,void **esp){
 > - recent_cpu is float type and -4 is int type. So, div_mixed() function is used to calculate.
 > - b is float type and d is int type. So, add_mixed() function is used to calculate.
 > - priority should be int type. So, fixed_point_to_int() is used to convert float type to int type.
-
 <br>
 
 #### - process.h
