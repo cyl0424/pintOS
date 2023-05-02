@@ -169,7 +169,7 @@ void argument_user_stack(char **argv,int argc,void **esp){
   **(char **)esp = 0;                         
 }
 ```
-> **Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice * 2)** <br>
+> **Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice \* 2)** <br>
 > - a and c are int type variables.
 > - recent_cpu is float type and -4 is int type. So, div_mixed() function is used to calculate.
 > - b is float type and d is int type. So, add_mixed() function is used to calculate.
@@ -186,5 +186,6 @@ void argument_user_stack(char **agrv,int argc,void **esp);
 ...
 ```
 <br>
+
 > **Declare the argument_user_stack() function in process.h.** <br>
 
