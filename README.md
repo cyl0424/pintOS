@@ -136,8 +136,10 @@ start_process (void *file_name_)
 <br> 
 
 > **Save tokens in user stack** <br>
-> - call argument_user_stack(argv, cnt, &if_.esp) <br>
-> - call hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true) <br>
+> - **call argument_user_stack()** <br>
+>   argument_user_stack(argv, cnt, &if_.esp) : stack up arguments in *argv* with the number of *cnt* on user stack. newly created function, described below. <br>
+> - **call hex_dump()** <br>
+>   hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true) : debugging tool to show the contents of the stack.
 <br>
 <br>
 
