@@ -118,7 +118,7 @@ start_process (void *file_name_)
 }
 ```
 > **Parse the string of file_name** <br>
-> - **char \*argv[128]** 
+> - **char \*argv[128]** <br>
 >   : add an array to store the sliced tokens, that is, the arguments <br>
 > - char \*slicing : add a variable to store the actual file name <br>
 > - int cnt : add a variable to count the number of the tokens, that is, argc <br>
