@@ -101,6 +101,7 @@ start_process (void *file_name_)
     argument_user_stack(argv, cnt, &if_.esp);
     hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true);
   }
+  
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
@@ -116,8 +117,19 @@ start_process (void *file_name_)
   NOT_REACHED ();
 }
 ```
-> **Add new int type fields for advanced scheduling.** <br>
-
+> **Parse the string of file_name** <br>
+> - char \*argv[128] : add an array to store the sliced tokens, that is, the arguments <br>
+> - char \*slicing : add a variable to store the actual file name <br>
+> - int cnt : add a variable to count the number of the tokens, that is, argc <br>
+> - strtok_r(file_name, " ", &save_ptr) : saparate a stiring into tokens by a certain delimeter. <br>
+> - while tmp is not NULL(=there is any argument left), <br>
+> - - save each token to argv[cnt] <br>
+> - - increment cnt by 1 <br>
+<br>                                         
+> **Save tokens in user stack** <br>
+> - call argument_user_stack(argv, cnt, &if_.esp) <br>
+> - call hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true) <br>
+<br>
 <br>
 
 ### To-do 3. Add argument_user_stack() function.** (userprog/process.\*)
