@@ -119,11 +119,15 @@ start_process (void *file_name_)
 ```
 > **Parse the string of file_name** <br>
 > - **char \*argv[128]** <br>
->   : add an array to store the sliced tokens, that is, the arguments <br>
-> - char \*slicing : add a variable to store the actual file name <br>
-> - int cnt : add a variable to count the number of the tokens, that is, argc <br>
-> - strtok_r(file_name, " ", &save_ptr) : saparate a stiring into tokens by a certain delimeter. <br>
-> - while tmp is not NULL(=there is any argument left), <br>
+>   add an array to store the sliced tokens, that is, the arguments <br>
+> - **char \*slicing** <br>
+>   add a variable to store the actual file name <br>
+> - **int cnt** <br>
+>   add a variable to count the number of the tokens, that is, argc <br>
+> - **strtok_r(file_name, " ", &save_ptr)** <br>
+>   saparate a stiring into tokens by a certain delimeter. <br>
+>   <br>
+> - **while** tmp is not NULL(=there is any argument left), <br>
 >   - save each token to argv[cnt] <br>
 >   - increment cnt by 1 <br>
 <br> 
