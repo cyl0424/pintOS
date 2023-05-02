@@ -56,6 +56,7 @@ tid_t process_execute (const char *file_name)
 > - char \*token : add a variable to store the actual file name <br>
 > - strtok_r(file_name, " ", &save_ptr) : saparate a stiring into tokens by a certain delimeter. <br>
                                           the first time the strtok_r() function is called, it returns a pointer to the first token in string.<br>
+<br>                                 
 > **Forward the first token to thread_create() function**
 > - thread_create (token, PRI_DEFAULT, start_process, fn_copy) <br>
 >         because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
