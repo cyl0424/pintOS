@@ -201,11 +201,21 @@ void argument_user_stack(char **argv,int argc,void **esp){
 ```
 > **Stack the arguments on the user stack** <br>
 > - **char \*argv_address[argc]** <br>
->   add an array to store the sliced tokens, that is, the arguments <br>
+>   add an array to store the address of argv[] <br>
 > - **int length** <br>
->   add an array to store the sliced tokens, that is, the arguments <br>
-> - **for (i = argc -1; i >= 0; i--)** <br>
->   add an array to store the sliced tokens, that is, the arguments <br>
+>   add a variable whose value is the total length of the instruction <br>
+> - **stack up arguments on to the user stack** <br>
+>   : save each argument from the top of the stack to the bottom
+>   - for (i = argc -1; i >= 0; i--), <br>
+>     - decrement the esp by the size of the argument <br>
+>     - copy the memory content of argv to esp <- stack up the argument on user stack <br>
+>     - set address_argv[i] to be the esp at that time when argv[i] is loaded on to the user stack <br>
+> - **word align** <br>
+>   : for the performance, add padding after finishing saving arguments <br>
+>   - if (length % 4 != 0), <br>
+>     - fill 0 to stack until the total length of the block becomes multiple of 4 <br>
+>  
+
 <br>
 
 
