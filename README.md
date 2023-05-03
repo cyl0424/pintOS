@@ -219,7 +219,9 @@ void argument_user_stack(char **argv,int argc,void **esp){
 >   because user register is 4 byte units based, down the esp by 4 every for each iteration <br>
 >   use argv_address[i] to get the address of each argument in user stack <br>
 > - **main(int argc, char **argv)** <br>
-> 
+>   : stack the address of the address of the first argument, and argc <br>
+> - **return address** <br>
+>   : stack 0 as the fake address
 <br>
 
 
