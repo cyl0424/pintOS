@@ -19,6 +19,9 @@
      
 - **Add argument_user_stack() function.** (userprog/process.\*) <br>
      : stack the arguments on the user stack.
+
+- **Modify setup_stack() function.** (userprog/process.\*) <br>
+     : make setup_stack() compatible with argument_user_stack().
      
 
 <br>
@@ -66,7 +69,7 @@ tid_t process_execute (const char *file_name)
 
 <br>
 
-### To-do 2. Modify start_process() function.** (userprog/process.c)
+### To-do 2. Modify start_process() function. (userprog/process.c) <br>
 ``` C
 static void
 start_process (void *file_name_)
@@ -143,7 +146,7 @@ start_process (void *file_name_)
 <br>
 <br>
 
-### To-do 3. Add argument_user_stack() function.** (userprog/process.\*)
+### To-do 3. Add argument_user_stack() function. (userprog/process.\*) <br>
 #### - process.h
 
 ``` C
@@ -155,7 +158,7 @@ void argument_user_stack(char **agrv,int argc,void **esp);
 ```
 <br>
 
-> **Declare the argument_user_stack() function in process.h.** <br>
+> **Declare the argument_user_stack() function in process.h** <br>
 
 
 #### - process.c
@@ -224,4 +227,45 @@ void argument_user_stack(char **argv,int argc,void **esp){
 >   : stack 0 as the fake address
 <br>
 
+### To-do 4. Modify setup_stack() function. (userprog/process.\*) <br>
+#### - process.h
+``` C
+...
+
+static bool setup_stack (void **esp);
+
+...
+```
+<br>
+
+> **Modify the declaration of setup_stack() function in process.h** <br>
+
+#### - process.c
+
+``` C
+...
+
+static bool
+setup_stack (void **esp) 
+{
+  uint8_t *kpage;
+  bool success = false;
+
+  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+  if (kpage != NULL) 
+    {
+      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+      if (success)
+        *esp = PHYS_BASE;
+      else
+        palloc_free_page (kpage);
+    }
+  return success;
+} 
+
+...
+```
+<br>
+
+> **Make setup_stack() compatible with argument_user_stack()** <br>
 
