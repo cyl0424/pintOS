@@ -204,7 +204,7 @@ void argument_user_stack(char **argv,int argc,void **esp){
 >   add an array to store the address of argv[] <br>
 > - **int length** <br>
 >   add a variable whose value is the total length of the instruction <br>
-> - **stack up arguments on to the user stack** <br>
+> - **stack arguments(String)** <br>
 >   : save each argument from the top of the stack to the bottom
 >   - for (i = argc -1; i >= 0; i--), <br>
 >     - decrement the esp by the size of the argument <br>
@@ -214,8 +214,12 @@ void argument_user_stack(char **argv,int argc,void **esp){
 >   : for the performance, add padding after finishing saving arguments <br>
 >   - if (length % 4 != 0), <br>
 >     - fill 0 to stack until the total length of the block becomes multiple of 4 <br>
->  
-
+> - **stack arguments' addresses(char \*)** <br>
+>   : stack the address of each argument saved the userstack <br>
+>   because user register is 4 byte units based, down the esp by 4 every for each iteration <br>
+>   use argv_address[i] to get the address of each argument in user stack <br>
+> - **main(int argc, char **argv)** <br>
+> 
 <br>
 
 
