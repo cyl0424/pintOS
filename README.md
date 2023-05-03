@@ -199,11 +199,13 @@ void argument_user_stack(char **argv,int argc,void **esp){
   **(char **)esp = 0;                         
 }
 ```
-> **Calculate to change the priority to PRI_MAX - (recent_cpu / 4) - (nice \* 2)** <br>
-> - a and c are int type variables.
-> - recent_cpu is float type and -4 is int type. So, div_mixed() function is used to calculate.
-> - b is float type and d is int type. So, add_mixed() function is used to calculate.
-> - priority should be int type. So, fixed_point_to_int() is used to convert float type to int type.
+> **Stack the arguments on the user stack** <br>
+> - **char \*argv_address[argc]** <br>
+>   add an array to store the sliced tokens, that is, the arguments <br>
+> - **int length** <br>
+>   add an array to store the sliced tokens, that is, the arguments <br>
+> - **for (i = argc -1; i >= 0; i--)** <br>
+>   add an array to store the sliced tokens, that is, the arguments <br>
 <br>
 
 
