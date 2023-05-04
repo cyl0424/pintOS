@@ -15,9 +15,9 @@ pintos/src/userprog/process.* <br>
 ## To-do
 - **Implement system call handler.** (userprog/syscall.\*) <br>
      : make system call handler call system call <br>
-       check validation of the pointers in the parameter <br>
-       copy arguments on the user stack to the kernel <br>
-       save return value of system call <br>
+      check validation of the pointers in the parameter <br>
+      copy arguments on the user stack to the kernel <br>
+      save return value of system call <br>
      
 - **Add address_check() function.** (userprog/syscall.\*) <br>
      : detect invalidity of pointers and terminating process without harm to the kernel. <br>
@@ -72,33 +72,79 @@ pintos/src/userprog/process.* <br>
 
 ## Project Description
 
-### To-do 1. Modify process_execution() function. (userprog/process.c) <br>
+### To-do 1. Implement system call handler. (userprog/syscall.\*) <br>
 
 ``` C
-tid_t process_execute (const char *file_name) 
+static void
+syscall_handler (struct intr_frame *f UNUSED)
 {
-  char *fn_copy;
-  tid_t tid;
-
-  /* Make a copy of FILE_NAME.
-     Otherwise there's a race between the caller and load(). */
-  fn_copy = palloc_get_page (0);
-  if (fn_copy == NULL)
-    return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE);
-  
-  /* Create a new thread to execute FILE_NAME. */
-  /* Project 2 - Argument Passing */
-  char *save_ptr;
-  char *token = strtok_r(file_name, " ", &save_ptr);
-
-  tid = thread_create (token, PRI_DEFAULT, start_process, fn_copy);
-  if (tid == TID_ERROR)
-    palloc_free_page (fn_copy);
-  return tid;
+  switch(*(int32_t*)(f->esp)){
+    case SYS_HALT: 
+      halt();
+      break;
+    case SYS_EXIT: 
+      address_check(f->esp+4);
+      exit(*(int*)(f->esp+4));
+      break;
+    case SYS_EXEC:
+      address_check(f->esp+4);
+      f->eax=exec((char*)*(uint32_t*)(f->esp+4));
+      break;
+    case SYS_WAIT:
+      address_check(f->esp+4);
+      f->eax = wait(*(uint32_t*)(f->esp+4));
+      break;
+    case SYS_CREATE:
+      address_check(f->esp+4);
+      address_check(f->esp+8);
+      f->eax = create((char*)*(uint32_t*)(f->esp+4), *(uint32_t*)(f->esp+8));
+      break;
+    case SYS_REMOVE: 
+      address_check(f->esp+4);
+      f->eax = remove((char*)*(uint32_t*)(f->esp+4));
+      break;
+    case SYS_OPEN:
+      address_check(f->esp+4);
+      f->eax = open((char*)*(uint32_t*)(f->esp+4));
+      break;
+    case SYS_FILESIZE:
+      address_check(f->esp+4);
+      f->eax = filesize(*(uint32_t*)(f->esp+4));
+      break;
+    case SYS_READ:
+      address_check(f->esp+4);
+      address_check(f->esp+8);
+      address_check(f->esp+12);
+      f->eax = read((int)*(uint32_t*)(f->esp+4), (void*)*(uint32_t*)(f->esp+8),
+            (unsigned)*(uint32_t*)(f->esp+12));
+      break;
+    case SYS_WRITE:
+      address_check(f->esp+4);
+      address_check(f->esp+8);
+      address_check(f->esp+12);
+      f->eax = write((int)*(uint32_t*)(f->esp+4), (const void*)*(uint32_t*)(f->esp+8),
+            (unsigned)*(uint32_t*)(f->esp+12));
+      break;
+    case SYS_SEEK:
+      address_check(f->esp+4);
+      address_check(f->esp+8);
+      seek((int)*(uint32_t*)(f->esp+4), (unsigned)*(uint32_t*)(f->esp+8));
+      break;
+    case SYS_TELL:
+      address_check(f->esp+4);
+      f->eax = tell((int)*(uint32_t*)(f->esp+4));
+      break;
+    case SYS_CLOSE:
+      address_check(f->esp+4);
+      close(*(uint32_t*)(f->esp+4));
+      break;
+    default:
+      exit(-1);
+      break;
+    }
 }
 ```
-> **Parse the string of 'file_name'** <br>
+> **Make system call handler call system call** <br>
 > - **char \*token** <br>
 >   add a variable to store the actual file name, and initialize as the result of strtok_r() <br>
 > - **strtok_r(file_name, " ", &save_ptr)** <br>
@@ -106,7 +152,19 @@ tid_t process_execute (const char *file_name)
     the first time the strtok_r() function is called, it returns a pointer to the first token in string.<br>         
 <br>
                                           
-> **Forward the first token to thread_create() function** <br>
+> **Check validation of the pointers in the parameter** <br>
+> - **thread_create (token, PRI_DEFAULT, start_process, fn_copy)** <br>
+>   because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
+
+<br>
+
+> **Copy arguments on the user stack to the kernel** <br>
+> - **thread_create (token, PRI_DEFAULT, start_process, fn_copy)** <br>
+>   because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
+
+<br>
+
+> **Save return value of system call** <br>
 > - **thread_create (token, PRI_DEFAULT, start_process, fn_copy)** <br>
 >   because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
 
