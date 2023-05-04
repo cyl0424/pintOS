@@ -185,7 +185,6 @@ void address_check(void *addr){
 > **Verify the validity of a user-provided pointer** <br>
 >   user can pass invalid pointers through the systemcall, such as a null pointer or pointer to unmapped virtual memory. <br>
 >   so, kernel need to detect invalidity of pointers and terminating process without harm to the kernel or other running processes. <br>
->   <br>
 > - **check if user passes valid pointers** <br>
 >   - **is_user_vaddr(addr)** : returns true if VADDR is a user virtual address. <br>
 >    <br>
