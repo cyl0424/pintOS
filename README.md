@@ -159,6 +159,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 <br>
 
 ### To-do 2. Add address_check() function. (userprog/syscall.c) <br>
+
 ``` C
 void address_check(void *addr){
   struct thread *cur = thread_current();
@@ -170,6 +171,7 @@ void address_check(void *addr){
   }
 }
 ```
+
 > **Verify the validity of a user-provided pointer** <br>
 >   user can pass invalid pointers through the systemcall, such as a null pointer or pointer to unmapped virtual memory. <br>
 >   so, kernel need to detect invalidity of pointers and terminating process without harm to the kernel or other running processes. <br>
@@ -181,112 +183,133 @@ void address_check(void *addr){
 >                                                or a null pointer if UADDR is unmapped.  <br>
 <br> 
 
-### To-do 3-1. Add system call halt().** (userprog/syscall.\*) <br>
-
+### To-do 3-1. Add system call halt().** (userprog/syscall.\c) <br>
 #### - process.c
+
 ```C
-void argument_user_stack(char **argv,int argc,void **esp){
-  char *argv_address[argc];
-  int length = 0;
-
-  int i;
-
-  for (i = argc -1; i >= 0; i--){
-    int instruction_size = strlen(argv[i])+1;
-    *esp -= instruction_size;
-    memcpy(*esp, argv[i], instruction_size);
-    length += instruction_size;
-    argv_address[i]=*esp;
-  }
-
-  if (length % 4 != 0){
-    for (i = (4 - (length % 4)); i > 0; i--){
-      *esp -= 1;
-      **(char **)esp = 0;
-    }
-  }
-
-  *esp = *esp - 4;
-  **(char **)esp = 0;
-
-  for (i = argc -1; i >= 0; i--){
-    *esp -= 4;
-    memcpy(*esp, &argv_address[i], strlen(&argv_address[i]));
-  }
-
-  *esp = *esp - 4;
-  *(char **)(*esp) = (*esp+4);
-
-  *esp = *esp - 4;
-  **(char **)esp = argc; 
-
-  *esp = *esp - 4;
-  **(char **)esp = 0;                         
+void halt(void){
+  shutdown_power_off();                     
 }
 ```
-> **Stack the arguments on the user stack** <br>
-> - **char \*argv_address[argc]** <br>
->   add an array to store the address of argv[] <br>
-> - **int length** <br>
->   add a variable whose value is the total length of the instruction <br>
-> - **stack arguments(String)** <br>
->   : save each argument from the top of the stack to the bottom
->   - for (i = argc -1; i >= 0; i--), <br>
->     - decrement the esp by the size of the argument <br>
->     - copy the memory content of argv to esp <- stack up the argument on user stack <br>
->     - set address_argv[i] to be the esp at that time when argv[i] is loaded on to the user stack <br>
-> - **word align** <br>
->   : for the performance, add padding after finishing saving arguments <br>
->   - if (length % 4 != 0), <br>
->     - fill 0 to stack until the total length of the block becomes multiple of 4 <br>
-> - **stack arguments' addresses(char \*)** <br>
->   : stack the address of each argument saved the userstack <br>
->   because user register is 4 byte units based, down the esp by 4 every for each iteration <br>
->   use argv_address[i] to get the address of each argument in user stack <br>
-> - **main(int argc, char \*\*argv)** <br>
->   : stack the address of the address of the first argument, and argc <br>
-> - **return address** <br>
->   : stack 0 as the fake address
 <br>
 
-### To-do 4. Modify setup_stack() function. (userprog/process.\*) <br>
-#### - process.h
-``` C
-...
+> **System call to shutdown pintos** <br>
+> - **shutdown_power_off()** <br>
+>   : Powers down the machine we're running on, as long as we're running on Bochs or QEMU. <br>
 
-static bool setup_stack (void **esp);
-
-...
-```
 <br>
 
-> **Modify the declaration of setup_stack() function in process.h** <br>
-
+### To-do 3-2. Add system call exit().** (userprog/syscall.\c) (threads/thread.h) <br>
 #### - process.c
-
 ``` C
-...
-
-static bool
-setup_stack (void **esp) 
-{
-  uint8_t *kpage;
-  bool success = false;
-
-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-  if (kpage != NULL) 
-    {
-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
-        *esp = PHYS_BASE;
-      else
-        palloc_free_page (kpage);
-    }
-  return success;
-} 
-
-...
+void exit(int status){
+  struct thread *t=thread_current();
+  printf("%s: exit(%d)\n", thread_name(), status);
+  t->exit_status = status;
+  thread_exit();
+}
 ```
 <br>
 
-> **Make setup_stack() compatible with argument_user_stack()** <br>
+> **System call to exit pintos** <br>
+> - **print thread name and its status**
+> - **int exit_status** <br>
+>   save the process's exit status to be the return value of wait() call <br>
+> - **terminate the process** <br>
+>   - **thread_exit()** : deschedules the current thread and destroys it <br>
+
+#### - thread.h
+``` C
+struct thread {
+
+  ...
+
+  int exit_status;
+  
+  ...
+
+}
+```
+<br>
+
+> **Add int type field named 'exit_status' to thread structure** <br>
+
+<br>
+
+### To-do 3-3. Add system call exec().** (userprog/syscall.\c) <br>
+#### - process.c
+``` C
+pid_t exec(const char *cmd_line){
+  tid_t tid = process_execute(cmd_line);
+  if(tid != -1){
+    struct thread *child_t = get_child_process(tid);
+    
+    if(child_t!=NULL){
+      if(child_t->load_flag == false){
+        return -1;
+      }
+      else{
+        return tid;
+      }
+    }
+  }
+  return tid;
+}
+```
+<br>
+
+> **System call to create child process and execute program corresponds to cmd_line on it** <br>
+> - **call process_execute(cmd_line)** <br>
+> - **int exit_status** <br>
+>   save the process's exit status to be the return value of wait() call <br>
+> - **terminate the process** <br>
+>   - **thread_exit()** : deschedules the current thread and destroys it <br>
+<br>
+
+``` C
+tid_t
+process_execute (const char *file_name){
+
+...
+
+  tid = thread_create (token, PRI_DEFAULT, start_process, fn_copy);
+  if (tid == TID_ERROR){
+    palloc_free_page (fn_copy);
+  }
+  else{
+    struct thread *cur = thread_current ();
+    struct list_elem* e = list_pop_back(&cur->child_thread_list);
+    struct thread *child_t = list_entry(e, struct thread, child_elem);
+		
+    sema_down(&child_t->wait_sema);
+    if(!child_t->load_flag){
+      tid = TID_ERROR;
+    } 
+    else{
+      list_push_back(&cur->child_thread_list, e);
+    }
+  }
+
+  struct list_elem *e;
+
+  for(e = list_begin(&thread_current()->child_thread_list);e!=list_end(&thread_current()->child_thread_list);e=list_next(e)){
+    struct thread *t = list_entry(e, struct thread, child_elem);
+    if(t->load_flag == false){
+      return process_wait(tid);
+    }
+  }
+  
+...
+  return tid;
+}
+```
+<br>
+
+> **Modify process_execute()** <br>
+>   parent should wait until it knows the child process has successfully created and the binary file is successfully loaded <br>
+> - **call process_execute(cmd_line)** <br>
+> - **int exit_status** <br>
+>   save the process's exit status to be the return value of wait() call <br>
+> - **terminate the process** <br>
+>   - **thread_exit()** : deschedules the current thread and destroys it <br>
+<br>
