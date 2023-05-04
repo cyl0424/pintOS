@@ -144,29 +144,17 @@ syscall_handler (struct intr_frame *f UNUSED)
     }
 }
 ```
-> **Make system call handler call system call. (userprog/syscall.c) ** <br>
-> - **char \*token** <br>
->   add a variable to store the actual file name, and initialize as the result of strtok_r() <br>
-> - **strtok_r(file_name, " ", &save_ptr)** <br>
->   saparate a stiring into tokens by a certain delimeter <br>
-    the first time the strtok_r() function is called, it returns a pointer to the first token in string.<br>         
+> **Make system call handler call system call. (userprog/syscall.c)** <br>
+>   for each case, call corresponding system calls with appropriate addresses <br>
 <br>
                                           
 > **Check validation of the pointers in the parameter** <br>
-> - **thread_create (token, PRI_DEFAULT, start_process, fn_copy)** <br>
->   because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
-
-<br>
-
-> **Copy arguments on the user stack to the kernel** <br>
-> - **thread_create (token, PRI_DEFAULT, start_process, fn_copy)** <br>
->   because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
+> - **address_check(f->esp+n)** : check if user is passing vailid pointer and terminate the process if not <br>
 
 <br>
 
 > **Save return value of system call** <br>
-> - **thread_create (token, PRI_DEFAULT, start_process, fn_copy)** <br>
->   because the new variable '\*token' now has a value of the first token of parsed string, pend it as the name of the new process. <br>
+>   save the return value of each system call to f->eax <br>
 
 <br>
 
@@ -193,20 +181,7 @@ void address_check(void *addr){
 >                                                or a null pointer if UADDR is unmapped.  <br>
 <br> 
 
-### To-do 3. Add argument_user_stack() function. (userprog/process.\*) <br>
-#### - process.h
-
-``` C
-...
-
-void argument_user_stack(char **agrv,int argc,void **esp);
-
-...
-```
-<br>
-
-> **Declare the argument_user_stack() function in process.h** <br>
-
+### To-do 3-1. Add system call halt().** (userprog/syscall.\*) <br>
 
 #### - process.c
 ```C
