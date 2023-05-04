@@ -1,4 +1,4 @@
-# Project 2 - User Program
+# Project 2 - Argument Passing
 > Extend process_excute() to support passing arguments to new processes.
 
 <br>
