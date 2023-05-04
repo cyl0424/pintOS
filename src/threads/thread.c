@@ -435,7 +435,6 @@ thread_create (const char *name, int priority,
   enum intr_level old_level;
 
   ASSERT (function != NULL);
-
   /* Allocate thread. */
   t = palloc_get_page (PAL_ZERO);
   if (t == NULL)
@@ -444,7 +443,6 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
-
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack' 
      member cannot be observed. */
@@ -570,8 +568,9 @@ thread_exit (void)
      and schedule another process.  That process will destroy us
      when it calls thread_schedule_tail(). */
   intr_disable ();
-  list_remove (&thread_current()->allelem);
-  thread_current ()->status = THREAD_DYING;
+  struct thread *cur = thread_current();
+  list_remove (&cur->allelem);
+  cur->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
 }
@@ -800,6 +799,26 @@ init_thread (struct thread *t, const char *name, int priority)
   t->nice = 0;
   t->recent_cpu = 0;
 
+  t->fd_index = 2;
+
+  int i;
+  for (i=0; i< 128; i++){
+    t->fd_table[i] = NULL;
+  }
+
+  t->exit_flag = 0;
+  t->load_flag = true;
+
+  t -> parent_thread = running_thread();
+
+  list_init(&(t->child_thread_list));
+  list_push_back(&(running_thread()->child_thread_list), &(t->child_elem));
+  
+  // sema_init(&(t->kill_sema), 0);
+  // sema_init(&(t->load_sema), 0);
+  sema_init(&(t->exit_sema), 0);
+  sema_init(&(t->wait_sema), 0);
+  
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 }
@@ -873,7 +892,7 @@ thread_schedule_tail (struct thread *prev)
   if (prev != NULL && prev->status == THREAD_DYING && prev != initial_thread) 
     {
       ASSERT (prev != cur);
-      palloc_free_page (prev);
+      // palloc_free_page (prev);
     }
 }
 

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "threads/thread.h"
+#include "filesys/file.h"
 
 typedef int pid_t;
 
@@ -21,5 +22,13 @@ int write (int fd, const void *buffer, unsigned length);
 void seek (int fd, unsigned position);
 unsigned tell (int fd);
 void close (int fd);
+
+void address_check(void *addr);
+
+void process_close_file(int fd_idx);
+int process_add_file(struct file *f);
+struct file *process_get_file(int fd_idx);
+
+
 
 #endif /* userprog/syscall.h */
