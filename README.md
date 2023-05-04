@@ -315,7 +315,7 @@ int wait(pid_t pid){
 ```
 <br>
 
-> **wait for termination of child process* <br>
+> **wait for termination of child process** <br>
 > - **call process_wait(pid)** <br>
 <br>
 
