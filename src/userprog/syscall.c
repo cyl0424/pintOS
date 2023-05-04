@@ -110,7 +110,7 @@ pid_t exec(const char *cmd_line){
   tid_t tid = process_execute(cmd_line);
   if(tid != -1){
     struct thread *child_t = get_child_process(tid);
-  
+    
     if(child_t!=NULL){
       if(child_t->load_flag == false){
         return -1;
