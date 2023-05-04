@@ -347,6 +347,7 @@ process_wait (tid_t child_tid UNUSED)
 
 ```
 <br>
+
 > **Modify process_wait()** <br>
 >   The caller blocks until the child process exits. <br>
 >   Once child process exits, deallocate the descriptor of child process and returns exit status of the child process. <br>
@@ -355,5 +356,5 @@ process_wait (tid_t child_tid UNUSED)
 >   - exit_status = t->exit_status : save exit status of child process <br>
 >   - list_remove(&t->child_elem) : remove the elem from the child list <br>
 >   - sema_up(&t->exit_sema) : release parent process from block <br>
->   - return exit_status
+>   - return exit_status <br>
 <br>
