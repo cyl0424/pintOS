@@ -178,7 +178,7 @@ void address_check(void *addr){
     exit(-1);
   }
   if(!pagedir_get_page(cur->pagedir, addr)==NULL){
-    exit(-1);
+    return -1;
   }
 }
 ```
