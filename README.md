@@ -144,7 +144,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     }
 }
 ```
-> **Make system call handler call system call** <br>
+> **Make system call handler call system call. (userprog/syscall.c) ** <br>
 > - **char \*token** <br>
 >   add a variable to store the actual file name, and initialize as the result of strtok_r() <br>
 > - **strtok_r(file_name, " ", &save_ptr)** <br>
@@ -170,65 +170,26 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 <br>
 
-### To-do 2. Modify start_process() function. (userprog/process.c) <br>
+### To-do 2. Add address_check() function. (userprog/syscall.c) <br>
 ``` C
-static void
-start_process (void *file_name_)
-{
-  char *file_name = file_name_;
-  struct intr_frame if_;
-  bool success;
-
-  /* Initialize interrupt frame and load executable. */
-  memset (&if_, 0, sizeof if_);
-  if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
-  if_.cs = SEL_UCSEG;
-  if_.eflags = FLAG_IF | FLAG_MBS;
-
-  char *argv[128];
-  char *save_ptr, *slicing;
-  char *tmp = file_name;
-  int cnt = 0;
-
-  while(true){
-    slicing = strtok_r(tmp, " ", &save_ptr);
-    argv[cnt] = slicing;
-    tmp = strtok_r(NULL, " ", &save_ptr);
-    cnt++;
-
-    if (tmp == NULL){
-      break;
-    }
+void address_check(void *addr){
+  struct thread *cur = thread_current();
+  if (addr == NULL || !(is_user_vaddr(addr))){
+    exit(-1);
   }
-
-  char *file = argv[0];
-  success = load (file, &if_.eip, &if_.esp);
-
-  if(success){
-    argument_user_stack(argv, cnt, &if_.esp);
-    hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true);
+  if(!pagedir_get_page(cur->pagedir, addr)==NULL){
+    return -1;
   }
-  
-  /* If load failed, quit. */
-  palloc_free_page (file_name);
-  if (!success) 
-    thread_exit ();
-
-  /* Start the user process by simulating a return from an
-     interrupt, implemented by intr_exit (in
-     threads/intr-stubs.S).  Because intr_exit takes all of its
-     arguments on the stack in the form of a `struct intr_frame',
-     we just point the stack pointer (%esp) to our stack frame
-     and jump to it. */
-  asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
-  NOT_REACHED ();
 }
 ```
-> **Parse the string of file_name** <br>
-> - **char \*argv[128]** <br>
->   add an array to store the sliced tokens, that is, the arguments <br>
-> - **char \*slicing** <br>
->   add a variable to store the actual file name <br>
+> **Verify the validity of a user-provided pointer** <br>
+> - **check if call is_user_vaddr(addr) is False** <br>
+>   - addr == NULL : <br>
+>   - is_user_vaddr(addr) : check if <br>
+> - **check if the user virtual address is mapped** <br>
+>   - pagedir_get_page(cur->pagedir, addr) : returns the kernel virtual address corresponding to that physical address, <br>
+>                                            or a null pointer if UADDR is unmapped.  <br>
+>   
 > - **int cnt** <br>
 >   add a variable to count the number of the tokens, that is, argc <br>
 > - **strtok_r(file_name, " ", &save_ptr)** <br>
