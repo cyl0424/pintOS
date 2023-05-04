@@ -178,35 +178,21 @@ void address_check(void *addr){
     exit(-1);
   }
   if(!pagedir_get_page(cur->pagedir, addr)==NULL){
-    return -1;
+    exit(-1);
   }
 }
 ```
 > **Verify the validity of a user-provided pointer** <br>
-> - **check if call is_user_vaddr(addr) is False** <br>
->   - addr == NULL : <br>
->   - is_user_vaddr(addr) : check if <br>
-> - **check if the user virtual address is mapped** <br>
->   - pagedir_get_page(cur->pagedir, addr) : returns the kernel virtual address corresponding to that physical address, <br>
->                                            or a null pointer if UADDR is unmapped.  <br>
->   
-> - **int cnt** <br>
->   add a variable to count the number of the tokens, that is, argc <br>
-> - **strtok_r(file_name, " ", &save_ptr)** <br>
->   saparate a stiring into tokens by a certain delimeter. <br>
+>   user can pass invalid pointers through the systemcall, such as a null pointer or pointer to unmapped virtual memory. <br>
+>   so, kernel need to detect invalidity of pointers and terminating process without harm to the kernel or other running processes. <br>
 >   <br>
-> - **while** tmp is not NULL(=there is any argument left), <br>
->   - save each token to argv[cnt] <br>
->   - increment cnt by 1 <br>
+> - **check if user passes valid pointers** <br>
+>   - **is_user_vaddr(addr)** : returns true if VADDR is a user virtual address. <br>
+>    <br>
+> - **check if the user virtual address is mapped** <br>
+>   - **pagedir_get_page(cur->pagedir, addr)** : returns the kernel virtual address corresponding to that physical address, <br>
+>                                                or a null pointer if UADDR is unmapped.  <br>
 <br> 
-
-> **Save tokens in user stack** <br>
-> - **call argument_user_stack()** <br>
->   argument_user_stack(argv, cnt, &if_.esp) : stack up arguments in *argv* with the number of *cnt* on user stack. newly created function, described below. <br>
-> - **call hex_dump()** <br>
->   hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true) : debugging tool to show the contents of the stack.
-<br>
-<br>
 
 ### To-do 3. Add argument_user_stack() function. (userprog/process.\*) <br>
 #### - process.h
