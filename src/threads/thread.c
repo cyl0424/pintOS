@@ -570,6 +570,7 @@ thread_exit (void)
   intr_disable ();
   struct thread *cur = thread_current();
   list_remove (&cur->allelem);
+  sema_down(&(thread_current()->kill_sema));
   cur->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
@@ -814,10 +815,9 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&(t->child_thread_list));
   list_push_back(&(running_thread()->child_thread_list), &(t->child_elem));
   
-  // sema_init(&(t->kill_sema), 0);
-  // sema_init(&(t->load_sema), 0);
   sema_init(&(t->exit_sema), 0);
   sema_init(&(t->wait_sema), 0);
+  sema_init(&(t->kill_sema), 0);
   
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
@@ -892,7 +892,7 @@ thread_schedule_tail (struct thread *prev)
   if (prev != NULL && prev->status == THREAD_DYING && prev != initial_thread) 
     {
       ASSERT (prev != cur);
-      // palloc_free_page (prev);
+      palloc_free_page (prev);
     }
 }
 
