@@ -265,8 +265,10 @@ pid_t exec(const char *cmd_line){
 > - **terminate the process** <br>
 >   - **thread_exit()** : deschedules the current thread and destroys it <br>
 <br>
+
 #### - process.c
 ``` C
+
 tid_t
 process_execute (const char *file_name){
 
