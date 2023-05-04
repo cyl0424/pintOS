@@ -110,20 +110,17 @@ pid_t exec(const char *cmd_line){
   tid_t tid = process_execute(cmd_line);
   if(tid != -1){
     struct thread *child_t = get_child_process(tid);
-  
-
-    if(child_t->load_flag == false){
-      return -1;
+    
+    if(child_t!=NULL){
+      if(child_t->load_flag == false){
+        return -1;
+      }
+      else{
+        return tid;
+      }
     }
-    else{
-      return tid;
-    }
-  }
-  else{
-    return -1;
   }
   return tid;
-  
 }
 
 
@@ -175,16 +172,17 @@ int filesize (int fd){
 
 
 int read (int fd, void *buffer, unsigned length){
-  address_check(buffer);
   unsigned char *buf = buffer;
   int read_length;
-
+  if (fd <=0 || fd >= 128){
+    return -1;
+  }
+  address_check(buffer);
   lock_acquire(&filesys_lock);
   
   if (fd == 0){
     for(read_length = 0; read_length < length; read_length++){
       char c = input_getc();
-      *(uint8_t*)(buffer+read_length) = c;
       if (!c){
         break;
       }
@@ -192,27 +190,26 @@ int read (int fd, void *buffer, unsigned length){
   }
   else{
     struct file *f = process_get_file(fd);
-
     if (f == NULL){
       lock_release(&filesys_lock);
       return -1;
     }
 
     read_length = file_read(f, buffer, length);
+    lock_release(&filesys_lock);
+    return read_length;
   }
-  lock_release(&filesys_lock);
-  return read_length;
 }
 
 
 int write (int fd, const void *buffer, unsigned length){
-  address_check(buffer);
   unsigned char *buf = buffer;
   int write_length;
 
   if (fd <=0 || fd >= 128){
     return -1;
   }
+  address_check(buffer);
   lock_acquire(&filesys_lock);
   
   if (fd == 1){
@@ -297,8 +294,8 @@ void process_close_file(int fd_idx){
     return NULL;
   }
   if(cur -> fd_table[fd_idx] != NULL){
-    file_close(cur -> fd_table[fd_idx]);
     cur-> fd_table[fd_idx] = NULL;
+    file_close(cur -> fd_table[fd_idx]);
   }
 }
 

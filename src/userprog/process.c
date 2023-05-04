@@ -53,15 +53,19 @@ process_execute (const char *file_name)
 		struct thread *child_t = list_entry(e, struct thread, child_elem);
 		
 		sema_down(&child_t->wait_sema);
-		if(!child_t->load_flag) tid = TID_ERROR;
-		else	list_push_back(&cur->child_thread_list, e);
+		if(!child_t->load_flag){
+      tid = TID_ERROR;
+    } 
+		else	{
+      list_push_back(&cur->child_thread_list, e);
+    }
   }
 
   struct list_elem *e;
 
   for(e = list_begin(&thread_current()->child_thread_list);e!=list_end(&thread_current()->child_thread_list);e=list_next(e)){
     struct thread *t = list_entry(e, struct thread, child_elem);
-    if(t->load_flag==false){
+    if(t->load_flag == false){
       return process_wait(tid);
     }
   }
@@ -186,7 +190,7 @@ process_wait (tid_t child_tid UNUSED)
     struct thread *t = list_entry(e, struct thread, child_elem);
     if (t == NULL)
 			return -1;
-		else if (t->tid == child_tid){
+		else if (t->tid == child_tid && t-> exit_status <=0){
 			sema_down(&t->wait_sema);
 			exit_status = t->exit_status;
 			list_remove(&t->child_elem);

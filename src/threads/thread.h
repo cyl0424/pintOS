@@ -114,8 +114,10 @@ struct thread
 
    struct semaphore exit_sema;
    struct semaphore wait_sema;
-   struct semaphore load_sema;
    struct semaphore kill_sema;
+
+   struct file *runnung_file;
+
    bool exit_flag;
    bool load_flag;
 
