@@ -237,7 +237,7 @@ struct thread {
 <br>
 
 ### To-do 3-3. Add system call exec().** (userprog/syscall.\c) <br>
-#### - process.c
+#### - syscall.c
 ``` C
 pid_t exec(const char *cmd_line){
   tid_t tid = process_execute(cmd_line);
@@ -265,7 +265,7 @@ pid_t exec(const char *cmd_line){
 > - **terminate the process** <br>
 >   - **thread_exit()** : deschedules the current thread and destroys it <br>
 <br>
-
+#### - process.c
 ``` C
 tid_t
 process_execute (const char *file_name){
@@ -316,9 +316,44 @@ int wait(pid_t pid){
 <br>
 
 > **wait for termination of child process* <br>
-> - **call process_execute(cmd_line)** <br>
-> - **int exit_status** <br>
->   save the process's exit status to be the return value of wait() call <br>
-> - **terminate the process** <br>
->   - **thread_exit()** : deschedules the current thread and destroys it <br>
+> - **call process_wait(pid)** <br>
+<br>
+
+#### - process.c
+``` C
+int
+process_wait (tid_t child_tid UNUSED) 
+{
+  struct thread *child_t;
+  struct list_elem *e;
+  int exit_status;
+
+  struct thread *cur = thread_current();
+
+  for (e = list_begin(&cur->child_thread_list); e != list_end(&cur->child_thread_list); e = list_next(e)){
+    struct thread *t = list_entry(e, struct thread, child_elem);
+    if (t == NULL)
+			return -1;
+		else if (t->tid == child_tid && t-> exit_status <=0){
+			sema_down(&t->wait_sema);
+			exit_status = t->exit_status;
+			list_remove(&t->child_elem);
+			sema_up(&t->exit_sema);
+			return exit_status;
+  }
+	}
+	return -1;
+}
+
+```
+<br>
+> **Modify process_wait()** <br>
+>   The caller blocks until the child process exits. <br>
+>   Once child process exits, deallocate the descriptor of child process and returns exit status of the child process. <br>
+> - **If child process is executing, wait until the child is terminated and return exit status** <br>
+>   - sema_down(&t->wait_sema) : blocks parent process <br>
+>   - exit_status = t->exit_status : save exit status of child process <br>
+>   - list_remove(&t->child_elem) : remove the elem from the child list <br>
+>   - sema_up(&t->exit_sema) : release parent process from block <br>
+>   - return exit_status
 <br>
