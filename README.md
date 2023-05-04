@@ -289,15 +289,6 @@ process_execute (const char *file_name){
       list_push_back(&cur->child_thread_list, e);
     }
   }
-
-  struct list_elem *e;
-
-  for(e = list_begin(&thread_current()->child_thread_list);e!=list_end(&thread_current()->child_thread_list);e=list_next(e)){
-    struct thread *t = list_entry(e, struct thread, child_elem);
-    if(t->load_flag == false){
-      return process_wait(tid);
-    }
-  }
   
 ...
   return tid;
@@ -307,6 +298,24 @@ process_execute (const char *file_name){
 
 > **Modify process_execute()** <br>
 >   parent should wait until it knows the child process has successfully created and the binary file is successfully loaded <br>
+> - **If tid is not error, decrement wait_sema of child process by 1** <br>
+>   - sema_down(&child_t->wait_sema) <br>
+>   - **If child process successes to load, put the process to child_thread_list** <br>
+> **Return tid** <br>
+<br>
+
+### To-do 3-4. Add system call wait().** (userprog/syscall.\c) <br>
+#### - syscall.c
+
+``` C
+int wait(pid_t pid){
+  process_wait(pid);
+}
+
+```
+<br>
+
+> **wait for termination of child process* <br>
 > - **call process_execute(cmd_line)** <br>
 > - **int exit_status** <br>
 >   save the process's exit status to be the return value of wait() call <br>
