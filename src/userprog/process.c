@@ -190,6 +190,7 @@ process_wait (tid_t child_tid)
 			sema_down(&t->wait_sema);
 			exit_status = t->exit_status;
 			list_remove(&t->child_elem);
+      sema_up(&(t->kill_sema));
 			sema_up(&t->exit_sema);
 			return exit_status;
     }
@@ -589,6 +590,7 @@ struct thread *get_child_process(pid_t pid){
   struct thread *cur = thread_current();
 
   for (e = list_begin(&(cur->child_thread_list)); e != list_end(&(cur->child_thread_list)); e = list_next(e)){
+    child_t = list_entry(e, struct thread, child_elem);
     if(pid == child_t->tid){
       return child_t;
     }
