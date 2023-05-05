@@ -205,6 +205,7 @@ process_exit (void)
   struct thread *cur = thread_current();
   uint32_t *pd;
 
+
   int i;
   for(i = 3; i < 128; i++){
     process_close_file(i);
@@ -227,6 +228,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
   
+
   sema_up(&cur->wait_sema);
   sema_down(&cur->exit_sema);
 
@@ -431,7 +433,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
   return success;
 }
 
