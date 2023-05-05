@@ -30,6 +30,10 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
+  if (file_name == NULL){
+    return TID_ERROR;
+  }
+  
   char *fn_copy;
   tid_t tid;
 
@@ -61,14 +65,6 @@ process_execute (const char *file_name)
     }
   }
 
-  struct list_elem *e;
-
-  for(e = list_begin(&thread_current()->child_thread_list);e!=list_end(&thread_current()->child_thread_list);e=list_next(e)){
-    struct thread *t = list_entry(e, struct thread, child_elem);
-    if(t->load_flag == false){
-      return process_wait(tid);
-    }
-  }
   return tid;
 }
 
@@ -178,24 +174,28 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
   struct thread *child_t;
   struct list_elem *e;
-  int exit_status;
+  int exit_status = -1;
 
   struct thread *cur = thread_current();
 
   for (e = list_begin(&cur->child_thread_list); e != list_end(&cur->child_thread_list); e = list_next(e)){
     struct thread *t = list_entry(e, struct thread, child_elem);
-    if (t == NULL)
-			return -1;
-		else if (t->tid == child_tid && t-> exit_status <=0){
-			sema_down(&t->wait_sema);
-			exit_status = t->exit_status;
-			list_remove(&t->child_elem);
-			sema_up(&t->exit_sema);
-			return exit_status;
+    if (t->tid == child_tid) {
+      if (t->exit_status > 0) {
+        exit_status = t->exit_status;
+        list_remove(&t->child_elem);
+        sema_up(&t->exit_sema);
+      } else {
+        sema_down(&t->wait_sema);
+        exit_status = t->exit_status;
+        list_remove(&t->child_elem);
+        sema_up(&t->exit_sema);
+      }
+      return exit_status;
     }
 	}
 	return -1;

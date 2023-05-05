@@ -107,34 +107,46 @@ void exit(int status){
 
 
 pid_t exec(const char *cmd_line){
-  tid_t tid = process_execute(cmd_line);
-  if(tid != -1){
-    struct thread *child_t = get_child_process(tid);
-    
-    if(child_t!=NULL){
-      if(child_t->load_flag == false){
-        return -1;
-      }
-      else{
-        return tid;
-      }
-    }
+  if(cmd_line == NULL){
+    exit(-1);
   }
+
+  tid_t tid = process_execute(cmd_line);
+  if (tid == TID_ERROR)
+    return -1;
+
+  struct thread *child_t = get_child_process(tid);
+  if (child_t == NULL)
+    return -1;
+
+  sema_down(&child_t->wait_sema);
+  if (child_t->load_flag == false)
+    return -1;
+
   return tid;
 }
 
 
 int wait(pid_t pid){
+  if (pid <= 0){
+    return-1;
+  }
   process_wait(pid);
 }
 
 
 bool create (const char *file, unsigned initial_size){
+  if (file == NULL){
+    exit(-1);
+  }
   return filesys_create(file, initial_size);
 }
 
 
 bool remove (const char *file){
+  if(file == NULL){
+    return -1;
+  }
   return filesys_remove(file);
 }
 
@@ -148,13 +160,15 @@ int open (const char *file){
   struct file *open_file = filesys_open(file);
 
   if (open_file == NULL){
+    lock_release(&filesys_lock);
     return -1;
   }
 
   int fd = process_add_file(open_file);
 
-  if(fd == -1){
+  if(fd == -1 || fd == 128){
     file_close(open_file);
+    return -1;
   }
 
   lock_release(&filesys_lock);
@@ -174,10 +188,13 @@ int filesize (int fd){
 int read (int fd, void *buffer, unsigned length){
   unsigned char *buf = buffer;
   int read_length;
-  if (fd <=0 || fd >= 128){
+
+  address_check(buffer);
+  
+  if (fd < 0 || fd == 1 || fd >= 128){
     return -1;
   }
-  address_check(buffer);
+  
   lock_acquire(&filesys_lock);
   
   if (fd == 0){
@@ -186,6 +203,7 @@ int read (int fd, void *buffer, unsigned length){
       if (!c){
         break;
       }
+      *buf++ = c;
     }
   }
   else{
@@ -194,11 +212,10 @@ int read (int fd, void *buffer, unsigned length){
       lock_release(&filesys_lock);
       return -1;
     }
-
     read_length = file_read(f, buffer, length);
-    lock_release(&filesys_lock);
-    return read_length;
   }
+  lock_release(&filesys_lock);
+  return read_length;
 }
 
 
@@ -206,16 +223,16 @@ int write (int fd, const void *buffer, unsigned length){
   unsigned char *buf = buffer;
   int write_length;
 
+  address_check(buffer);
+
   if (fd <=0 || fd >= 128){
     return -1;
   }
-  address_check(buffer);
+  
   lock_acquire(&filesys_lock);
   
   if (fd == 1){
     putbuf(buf, length);
-    lock_release(&filesys_lock);
-    return length;
   }
   else{
     struct file *f = process_get_file(fd);
@@ -224,9 +241,9 @@ int write (int fd, const void *buffer, unsigned length){
       return -1;
     }
     write_length = file_write(f, buffer, length);
-    lock_release(&filesys_lock);
-    return write_length;
   }
+  lock_release(&filesys_lock);
+  return write_length;
 }
 
 void seek (int fd, unsigned position){
@@ -248,28 +265,25 @@ unsigned tell (int fd){
 }
 
 void close (int fd){
+  if(fd <= 2 || fd >= 128){
+    return;
+  }
+
   struct file *f = process_get_file(fd);
   if (f == NULL){
     return;
   }
 
   process_close_file(fd);
-  
-  if(fd <= 1 || fd <= 2){
-    return;
-  }
-
   file_close(f);
 
 }
 
-void address_check(void *addr){
+void address_check(void *addr) {
   struct thread *cur = thread_current();
-  if (addr == NULL || !(is_user_vaddr(addr))){
+  if (addr == NULL || !is_user_vaddr(addr) || pagedir_get_page(cur->pagedir, addr) == NULL) {
     exit(-1);
   }
-  if(!pagedir_get_page(cur->pagedir, addr)==NULL){
-    return -1;}
 }
 
 int process_add_file(struct file *f){
@@ -280,6 +294,7 @@ int process_add_file(struct file *f){
     if (cur->fd_table[i] == NULL){
       cur->fd_table[i] = f;
       cur->fd_index = i;
+      cur->running_file = f;
       return cur->fd_index;
     }
   }
