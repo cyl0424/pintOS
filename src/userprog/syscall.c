@@ -119,7 +119,6 @@ pid_t exec(const char *cmd_line){
   if (child_t == NULL)
     return -1;
 
-  sema_down(&child_t->wait_sema);
   if (child_t->load_flag == false)
     return -1;
 
@@ -190,7 +189,7 @@ int read (int fd, void *buffer, unsigned length){
   int read_length;
 
   address_check(buffer);
-  
+
   if (fd < 0 || fd == 1 || fd >= 128){
     return -1;
   }

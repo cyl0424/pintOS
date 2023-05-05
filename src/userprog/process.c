@@ -94,7 +94,7 @@ void argument_user_stack(char **argv,int argc,void **esp){
 
   for (i = argc -1; i >= 0; i--){
     *esp -= 4;
-    memcpy(*esp, &argv_address[i], strlen(&argv_address[i]));
+    memcpy(*esp, &argv_address[i], sizeof(char *));
   }
 
   *esp = *esp - 4;
@@ -178,24 +178,20 @@ process_wait (tid_t child_tid)
 {
   struct thread *child_t;
   struct list_elem *e;
-  int exit_status = -1;
+  int exit_status;
 
   struct thread *cur = thread_current();
 
   for (e = list_begin(&cur->child_thread_list); e != list_end(&cur->child_thread_list); e = list_next(e)){
     struct thread *t = list_entry(e, struct thread, child_elem);
-    if (t->tid == child_tid) {
-      if (t->exit_status > 0) {
-        exit_status = t->exit_status;
-        list_remove(&t->child_elem);
-        sema_up(&t->exit_sema);
-      } else {
-        sema_down(&t->wait_sema);
-        exit_status = t->exit_status;
-        list_remove(&t->child_elem);
-        sema_up(&t->exit_sema);
-      }
-      return exit_status;
+    if (t == NULL)
+			return -1;
+		else if (t->tid == child_tid && t-> exit_status <=0){
+			sema_down(&t->wait_sema);
+			exit_status = t->exit_status;
+			list_remove(&t->child_elem);
+			sema_up(&t->exit_sema);
+			return exit_status;
     }
 	}
 	return -1;
