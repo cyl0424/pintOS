@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "filesys.h": "c",
+        "palloc.h": "c",
+        "syscall.h": "c",
+        "string.h": "c",
+        "timer.h": "c",
+        "pagedir.h": "c",
+        "tss.h": "c",
+        "interrupt.h": "c",
+        "vaddr.h": "c",
+        "malloc.h": "c"
+    }
+}
