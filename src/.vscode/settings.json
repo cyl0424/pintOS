@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "exception.h": "c",
-        "input.h": "c",
-        "random": "c"
-    }
-}
