@@ -13,6 +13,8 @@
 #include "filesys/file.h"
 #include "devices/input.h"
 #include "vm/page.h"
+#include "vm/frame.h"
+#include "vm/swap.h"
 
 struct file_descriptor
 {
@@ -525,7 +527,7 @@ mmap (int fd, void *addr){
   if (pg_ofs (addr) != 0 || !addr || is_user_vaddr (addr) == false)
     return -1;
   
-  mmap_file = (struct mmap_file *)malloc (sizeof (struct mmap_file));
+  mmap_file = malloc (sizeof (struct mmap_file));
   if (mmap_file == NULL){
     return -1;
   }
@@ -551,7 +553,7 @@ mmap (int fd, void *addr){
       return -1;
     }
 
-    struct vm_entry *vme = (struct vm_entry *)malloc (sizeof (struct vm_entry));
+    struct vm_entry *vme = malloc (sizeof (struct vm_entry));
     memset(vme, 0, sizeof(struct vm_entry));
 
     int read_bytes_ = PGSIZE;
@@ -563,7 +565,8 @@ mmap (int fd, void *addr){
     vme->vaddr = addr;
     vme->writable = true;
     vme->is_loaded = false;
-    vme->file = mmap_file->file;      vme->offset = offset;
+    vme->file = mmap_file->file;
+    vme->offset = offset;
     vme->read_bytes = read_bytes_;
     vme->zero_bytes = PGSIZE - read_bytes_;
 

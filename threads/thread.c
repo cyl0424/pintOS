@@ -13,6 +13,8 @@
 #include "threads/vaddr.h"
 #include "threads/fixed_point.h"
 #include "vm/page.h"
+#include "vm/frame.h"
+#include "vm/swap.h"
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -446,7 +448,6 @@ thread_create (const char *name, int priority,
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
 
-  vm_init (&t->vm);
   list_init(&t->mmap_list);
   t->next_mapid = 1;
 

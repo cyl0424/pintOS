@@ -32,7 +32,7 @@ struct page {
     void *kaddr;
     struct vm_entry *vme;
     struct thread *t;
-    struct list_elem *lru;
+    struct list_elem lru;
 };
 
 struct mmap_file {
@@ -56,8 +56,9 @@ bool delete_vme (struct hash *, struct vm_entry *);
 bool load_file (void *kaddr, struct vm_entry *);
 
 struct page *alloc_page (enum palloc_flags);
+void free_victim_page(enum palloc_flags);
+
 void free_page (void *);
-void free_page_thread (struct thread *);
 void __free_page (struct page *);
 
 #endif
