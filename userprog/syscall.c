@@ -75,7 +75,7 @@ static struct vm_entry
   }
 
   if (!find_vme (addr))
-    {    
+    {   
       exit(-1);
     }
   return find_vme(addr);
@@ -102,7 +102,6 @@ syscall_handler (struct intr_frame *f)
 {
   uint32_t *esp;
   esp = f->esp;
-
   if (!is_valid_ptr (esp) || !is_valid_ptr (esp + 1) ||
       !is_valid_ptr (esp + 2) || !is_valid_ptr (esp + 3))
     {
@@ -524,6 +523,10 @@ mmap (int fd, void *addr){
   struct mmap_file *mmap_file;
   size_t offset = 0;
 
+  if(find_vme(addr)){
+      return -1;
+    }
+
   if (pg_ofs (addr) != 0 || !addr || is_user_vaddr (addr) == false)
     return -1;
   
@@ -544,7 +547,9 @@ mmap (int fd, void *addr){
 
   mmap_file->file = file_reopen(mmap_file->file);
   mmap_file->mapid = cur->next_mapid++;
+
   list_push_back(&cur-> mmap_list, &mmap_file->elem);
+  list_init(&mmap_file->vme_list);
 
   int len = file_length(mmap_file->file);
 
@@ -570,12 +575,12 @@ mmap (int fd, void *addr){
     vme->read_bytes = read_bytes_;
     vme->zero_bytes = PGSIZE - read_bytes_;
 
-    list_push_back(&(mmap_file->vme_list), &vme->mmap_elem); 
+    list_push_back(&mmap_file->vme_list, &vme->mmap_elem); 
     insert_vme(&cur->vm, vme);
-      
+    
+    len -= read_bytes_;
     addr += PGSIZE;
     offset += read_bytes_;
-    len -= read_bytes_;
   }
   return mmap_file->mapid;
 }

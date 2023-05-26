@@ -6,6 +6,7 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "userprog/process.h"
+#include <hash.h>
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
@@ -157,12 +158,13 @@ page_fault (struct intr_frame *f)
     exit(-1);
   }
   vme = find_vme(fault_addr);
-  if (!vme){
+  if (vme == NULL){
     printf("no vme\n");
     if (!verify_stack((int32_t) fault_addr, f->esp)){
       printf("no stack\n");
       exit(-1);
     }
+    expand_stack(fault_addr);
     return ;
   }
   if (!handle_mm_fault(vme)){
@@ -202,5 +204,5 @@ exit (int status)
 bool
 verify_stack (int32_t addr, int32_t esp)
 {
-  return is_user_vaddr(addr) && (esp-addr <= 32 && PHYS_BASE-addr <= 8 * 1024 * 1024);
+  return is_user_vaddr(pg_round_down(addr)) && esp-addr <= 32 && PHYS_BASE-addr <= 8 * 1024 * 1024;
 }

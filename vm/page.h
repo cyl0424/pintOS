@@ -42,9 +42,9 @@ struct mmap_file {
     struct list vme_list;
 };
 
-static unsigned vm_hash_func (const struct hash_elem *, void * UNUSED);
-static bool vm_less_func (const struct hash_elem *, const struct hash_elem *, void * UNUSED);
-static void vm_destroy_func (struct hash_elem *, void * UNUSED);
+unsigned vm_hash_func (const struct hash_elem *, void * );
+bool vm_less_func (const struct hash_elem *, const struct hash_elem *, void * );
+void vm_destroy_func (struct hash_elem *, void * );
 
 void vm_init (struct hash *);
 void vm_destroy (struct hash *);

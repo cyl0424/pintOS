@@ -2,44 +2,48 @@
 #include "threads/vaddr.h"
 #include "threads/thread.h"
 #include "threads/malloc.h"
+#include "threads/palloc.h"
 #include "vm/frame.h"
 #include "vm/swap.h"
 #include "userprog/pagedir.h"
 #include "filesys/file.h"
 #include "threads/interrupt.h"
 #include <string.h>
+#include <hash.h>
 
-void vm_init (struct hash *vm){
-    if (vm != NULL){
-        hash_init(vm, vm_hash_func, vm_less_func, NULL);  
-    }
-    return ;
-}
 
-static unsigned vm_hash_func (const struct hash_elem *e, void *aux UNUSED){
-    int res;
+unsigned vm_hash_func (const struct hash_elem *e, void *aux){
+    unsigned int res;
     if (e != NULL){
         int hash_ent = hash_entry(e, struct vm_entry, elem) ->vaddr;
         res = hash_int(hash_ent);
         return res;
     }
-    return ;
+    return NULL;
 }
 
-static bool vm_less_func (const struct hash_elem *e1, const struct hash_elem *e2, void *aux UNUSED){
+bool vm_less_func (const struct hash_elem *e1, const struct hash_elem *e2, void *aux){
     if (e1 != NULL && e2 != NULL){
         int e1_entry = hash_entry(e1, struct vm_entry, elem) ->vaddr;
         int e2_entry = hash_entry(e2, struct vm_entry, elem) ->vaddr;
         return e1_entry < e2_entry;
     }
-    return ;
+    return NULL;
 }
 
-static void vm_destroy_func (struct hash_elem *e, void *aux UNUSED){
-    ASSERT (e != NULL);
-    struct vm_entry *vme = hash_entry(e, struct vm_entry, elem);
-    free_page(pagedir_get_page(thread_current()->pagedir, vme->vaddr));
-    free(vme);
+
+void vm_init (struct hash *vm){
+    if (vm != NULL){
+        hash_init(vm, vm_hash_func, vm_less_func, NULL);
+    }
+}
+
+void vm_destroy_func (struct hash_elem *e, void *aux){
+    if (e != NULL){
+        struct vm_entry *vme = hash_entry(e, struct vm_entry, elem);
+        free_page(pagedir_get_page(thread_current()->pagedir, vme->vaddr));
+        free(vme);
+    }
 }
 
 void vm_destroy (struct hash *vm){
@@ -51,13 +55,13 @@ void vm_destroy (struct hash *vm){
 struct vm_entry *find_vme (void *vaddr){
     struct vm_entry vme;
     struct hash_elem *e;
-    struct thread *cur = thread_current();
 
     if (vaddr != NULL){
         vme.vaddr = pg_round_down(vaddr);
+        struct thread *cur = thread_current();
 
         if (pg_ofs(vme.vaddr) == 0){
-            e = hash_find(&cur->vm, &vme.elem);
+            e = hash_find(&cur->vm, &vme.elem);  
         }
     }
 
@@ -77,7 +81,7 @@ bool insert_vme (struct hash *vm, struct vm_entry *vm_entry){
         bool res = (hash_insert(vm, &vm_entry->elem) == NULL);
         return res;
     }
-    return ;
+    return false;
 }
 
 bool delete_vme (struct hash *vm, struct vm_entry *vm_entry){
@@ -86,14 +90,16 @@ bool delete_vme (struct hash *vm, struct vm_entry *vm_entry){
             return false;
         };
 
+        free_page(pagedir_get_page(thread_current()->pagedir, vm_entry->vaddr));
+        free(vm_entry);
         return true;
     }
-    return ;
+    return false;
 }
 
 bool load_file (void *kaddr, struct vm_entry *vm_entry){
     if (kaddr == NULL || vm_entry == NULL || vm_entry -> type == VM_ANON){
-        return;
+        return false;
     }
     if (file_read_at(vm_entry->file, kaddr, vm_entry->read_bytes, vm_entry->offset) != (int) vm_entry->read_bytes){
         return false;
@@ -112,7 +118,10 @@ void free_victim_page(enum palloc_flags flag){
     }
     else if(lru_clock==NULL || lru_clock==list_end(&lru_list)){
         lru_clock = list_begin(&lru_list);
-    }else{
+    }else if (list_next(lru_clock)==list_end(&lru_list)){
+        list_begin(&lru_list);
+    }    
+    else{
         lru_clock = list_next(lru_clock);
     }
 
@@ -179,6 +188,7 @@ struct page *alloc_page (enum palloc_flags flag){
 
     return page;
 }
+
 
 void free_page (void *kaddr){
     struct list_elem *e;

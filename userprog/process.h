@@ -9,5 +9,6 @@ void process_exit (void);
 void process_activate (void);
 bool handle_mm_fault(struct vm_entry *);
 void do_munmap(int);
+bool expand_stack (void *);
 
 #endif /* userprog/process.h */

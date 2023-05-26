@@ -9,6 +9,7 @@
         "tss.h": "c",
         "interrupt.h": "c",
         "vaddr.h": "c",
-        "malloc.h": "c"
+        "malloc.h": "c",
+        "thread.h": "c"
     }
 }

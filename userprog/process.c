@@ -21,6 +21,7 @@
 #include "devices/timer.h"
 #include "vm/page.h"
 #include "vm/frame.h"
+#include <hash.h>
 #include "vm/swap.h"
 
 static thread_func start_process NO_RETURN;
@@ -90,6 +91,8 @@ start_process (void *file_name_)
   struct thread *cur;
   struct thread *parent;
 
+  vm_init(&cur->vm);
+
   const char **argv = (const char**) palloc_get_page(0);
 
   char *token;
@@ -98,8 +101,6 @@ start_process (void *file_name_)
   for (token = strtok_r(file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr)){
     argv[argc++] = token;
   }
-
-  vm_init(&cur->vm);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -213,7 +214,7 @@ process_exit (void)
     do_munmap(mapid);
   }
 
-  vm_destroy (&cur->vm);
+  vm_destroy(&cur->vm);
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -552,7 +553,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         return false;
       }
 
-      memset (vm_ent, 0, sizeof(struct vm_entry));
       vm_ent -> type = VM_BIN;
       vm_ent -> vaddr = upage;
       vm_ent -> writable = writable;
@@ -565,6 +565,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
+      ofs += page_read_bytes;
       upage += PGSIZE;
     }
   return true;
@@ -722,25 +723,59 @@ void do_munmap(int mapid){
     if (f->mapid == mapid){
 
       for (e2 = list_begin(&f->vme_list); e2 != list_end(&f->vme_list);) {
-        next_e2 = list_next(e2);
         struct thread *cur = thread_current();
         struct vm_entry *vme = list_entry(e2, struct vm_entry, mmap_elem);
 
         if (vme->is_loaded && pagedir_is_dirty(&cur->pagedir, vme->vaddr)) {
           file_write_at(vme->file, vme->vaddr, vme->read_bytes, vme->offset);
+          free_page(vme->vaddr);
         }
 
         vme->is_loaded = false;
-        list_remove(e2);
-
+        e2 = list_remove(e2);
         delete_vme(&cur->vm, vme);
-
-        e2 = next_e2;
       }
 
       list_remove(&f->elem);
       free(f);
+
     }
     
   }
+}
+
+bool
+expand_stack (void *addr)
+{
+  struct page *kpage = alloc_page (PAL_USER | PAL_ZERO);
+
+  struct vm_entry *vme = malloc(sizeof(struct vm_entry));
+  if (vme == NULL){
+    return false;
+  }
+
+  if (kpage != NULL)
+    {
+      kpage->vme = vme;
+      void *upage = pg_round_down(addr);
+      
+      memset(kpage->vme, 0, sizeof (struct vm_entry));
+
+      kpage->vme->type = VM_ANON;
+      kpage->vme->vaddr = upage;
+      kpage->vme->writable = true;
+      kpage->vme->is_loaded = true;
+
+      insert_vme(&thread_current()->vm, kpage->vme);
+
+      if (!install_page(vme->vaddr, kpage->kaddr, true)){
+        free_page(kpage->kaddr);
+        free(vme);
+        return false;
+      }
+
+      add_page_to_lru_list(kpage);
+      return true;
+
+    }
 }

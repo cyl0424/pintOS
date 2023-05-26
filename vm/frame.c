@@ -13,7 +13,7 @@ void lru_list_init(void){
     lru_clock = NULL;
 }
 
-void add_page_to_lru_list (struct page *page){
+void add_page_to_lru_list(struct page *page){
     lock_acquire(&lru_list_lock);
     list_push_back(&lru_list, &page->lru);
     lock_release(&lru_list_lock);
