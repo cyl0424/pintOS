@@ -9,7 +9,7 @@
 pintos/src/threads/thread.* <br>
 pintos/src/userprog/syscall.* <br>
 pintos/src/userprog/process.* <br>
-pintos/src/userprog/process.* <br>
+pintos/src/userprog/exception.* <br>
 
 ## Files to add
 pintos/src/vm/page.* <br>
@@ -18,60 +18,62 @@ pintos/src/vm/swap.* <br>
 
 <br>
 
-## To-do
-- **Implement system call handler.** (userprog/syscall.\*) <br>
-     : make system call handler call system call <br>
-      check validation of the pointers in the parameter <br>
-      copy arguments on the user stack to the kernel <br>
-      save return value of system call <br>
+## To-do - Demand paging
+- **Define virtual memory entry structure.** (vm/page.\*) <br>
+     : contain the page table index and page offset. <br>
      
-- **Add address_check() function.** (userprog/syscall.\*) <br>
-     : detect invalidity of pointers and terminating process without harm to the kernel. <br>
+- **Add vm_init().** (vm/page.\*) <br>
+     : initialize hash table. <br>  
 
-- **Add system call halt().** (userprog/syscall.\*) <br>
-     : shutdown pintos. <br>
+- **Add vm_hash_func().** (vm/page.\*) <br>
+     : return a hash value. <br>  
+ 
+ - **Add insert_vme().** (vm/page.\*) <br>
+     : Insert vm_entry into hash table. <br>  
+
+ - **Add delete_vme().** (vm/page.\*) <br>
+     : Remove vm_entry from hash table. <br> 
+
+ - **Add find_vme().** (vm/page.\*) <br>
+     : Search and return vm_entry corresponding to vaddr entered as a factor. <br>
+
+ - **Add vm_destroy().** (vm/page.\*) <br>
+     : Remove the bucket list and vm_entry from the hash table. <br>
+
+- **Add vm hash table structure in thread structure and add code to initialize hash table.** (threads/thread.\*) <br>
+     : initialize hash table when process creates. <br>
+ 
+ - **Modify process_exit().** (vm/page.\*) <br>
+     : Add vm_destory() to remove vm_entries at the end of the process. <br>
+
+- **Modify load_segment().** (userprog/procecss.\*) <br>
+     : Adds ability to initialize process virtual memory related data structures. <br>
+
+- **Modify setup_stack().** (userprog/process.\*) <br>
+     : Create a vm_entry and set the field value of the created vm_entry to initialize and insert into the vm hash table.. <br>
+
+- **Add address_check().** (userprog/syscall.\*) <br>
+     : Use vm_entry to perform validation and return vm_entry. <br>
      
-- **Add system call exit().** (userprog/syscall.\*) <br>
-     : exit pintos. <br>
+- **Add check_buffer().** (userprog/syscall.\*) <br>
+     : Check if the address of the buffer in the read() system call is a valid virtual address. <br> 
+
+- **Modify syscall_handler().** (userprog/syscall.\*) <br>
+     : Add check_buffer() to validate with or without buffers. <br>  
+
+- **Add load_file().** (vm/page.\*) <br>
+     : Load pages that exist on disk into physical memory. <br>
      
-- **Add system call exec().** (userprog/syscall.\*) <br>
-     : create child process and execute program. <br>
-     
-- **Add system call wait().** (userprog/syscall.\*) <br>
-     : wait for termination of child process. <br> 
-     
-- **Implement file descriptor table.** (userprog/syscall.\*) <br>
-     : implement an array of pointers to struct file, used to access to files. <br>
-     
-- **Add system call create().** (userprog/syscall.\*) <br>
-     : create file. <br>
-     
-- **Add system call remove().** (userprog/syscall.\*) <br>
+- **Add install_page().** (vm/page.\*) <br>
      : remove file. <br>  
 
-- **Add system call open().** (userprog/syscall.\*) <br>
-     : open file. <br>
+- **Add handle_mm_fault().** (userprog/process.\*) <br>
+     : Assign a physical page when a page fault occurs. <br>  
+     : Load files on disk into physical pages by calling load_file(). <br>  
+     : Map virtual and physical addresses to page tables when loading into physical memory is complete. <br>  
      
-- **Add system call filesize().** (userprog/syscall.\*) <br>
-     : return the size, in bytes, of the open file. <br>  
-
-- **Add system call read().** (userprog/syscall.\*) <br>
-     : read size bytes from the file open as fd into buffer. <br>
-     
-- **Add system call write().** (userprog/syscall.\*) <br>
-     : write data from buffer to open file. <br>  
-     
-- **Add system call seek().** (userprog/syscall.\*) <br>
-     : changes the next byte to be read or written in open file. <br>
-     
-- **Add system call tell().** (userprog/syscall.\*) <br>
-     : stack the arguments on the user stack. <br> 
-
-- **Add system call close().** (userprog/syscall.\*) <br>
-     : stack the arguments on the user stack. <br>
-     
-- **Modify load() and process_exit().** <br>
-     : deny writes to executing files. <br>
+- **Add a function to handle when a page fault occurs.** (userprog/exeption.\*) <br>
+     : Validates fault_addr and calls handle_mm_fault(). <br>
        
 <br>
 <br>
