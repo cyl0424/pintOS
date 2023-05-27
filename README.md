@@ -9,6 +9,12 @@
 pintos/src/threads/thread.* <br>
 pintos/src/userprog/syscall.* <br>
 pintos/src/userprog/process.* <br>
+pintos/src/userprog/process.* <br>
+
+## Files to add
+pintos/src/vm/page.* <br>
+pintos/src/vm/frame.* <br>
+pintos/src/vm/swap.* <br>
 
 <br>
 
