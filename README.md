@@ -44,9 +44,9 @@ pintos/src/vm/swap.* <br>
      : Remove the bucket list and vm_entry from the hash table. <br>
 
 - **Add vm hash table structure in thread structure and add code to initialize hash table.** (threads/thread.\*) <br>
-     : initialize hash table when process creates. <br>
+     : initialize hash table when process starts. <br>
  
-- **Modify process_exit().** (vm/page.\*) <br>
+- **Modify process_exit().** (userprog/process.\*) <br>
      : Add vm_destory() to remove vm_entries at the end of the process. <br>
 
 - **Modify load_segment().** (userprog/procecss.\*) <br>
@@ -118,7 +118,7 @@ struct vm_entry {
 >  **Structure of vm_entry** <br>
 > - **uint8_t type** <br>
 >    Type that distinguishes VM_BIN, VM_FILE, and VM_ANON
-> - **void *vaddr;** <br>
+> - **void *vaddr** <br>
 >    virtual page number
 > - **bool writable** <br>
 >    indicate whether the address is writable
@@ -215,164 +215,381 @@ bool insert_vme (struct hash *vm, struct vm_entry *vm_entry){
     return false;
 }
 ```
+> **if(vm != NULL && vm_entry != NULL && pg_ofs(vm_entry->vaddr)==0){ }**<br>
+> - if the vm pointer is not NULL, indicating that the hash table is valid and exists.<br>
+> - if the vm_entry pointer is not NULL, indicating that the entry to be inserted is valid and exists.<br>
+> - if the ‘vaddr’ field of vm_entry is aligned to a page boundary by using the pg_ofs macro and checking if it equals 0. This condition ensures that the ‘vaddr’ is properly aligned.<br>
 
-### To-do 2. Add address_check() function. (userprog/syscall.c) <br>
-``` C
-void address_check(void *addr){
-  struct thread *cur = thread_current();
-  if (addr == NULL || !(is_user_vaddr(addr))){
-    exit(-1);
+> **bool res = (hash_insert(vm, \&vm_entry->elem) == NULL)**<br>
+> - If all three conditions are satisfied, the code proceeds to call the hash_insert function, passing the vm hash table and the elem member of vm_entry as arguments. The hash_insert function attempts to insert the element into the hash table.<br>
+> - The result of the hash_insert function is then compared to NULL using the equality (==) operator. If the result is NULL, it indicates that the insertion was successful, and the function returns true. Otherwise, if the result is not NULL, it means that there was already an element with the same key in the hash table, and the function returns false.<br>
+
+<br>
+
+### To-do 6. Add delete_vme(). (vm/page.\*) <br>
+```C
+bool delete_vme (struct hash *vm, struct vm_entry *vm_entry){
+    if(vm != NULL && vm_entry != NULL){
+        if(!hash_delete(vm, &vm_entry->elem)){
+            return false;
+        };
+
+        free_page(pagedir_get_page(thread_current()->pagedir, vm_entry->vaddr));
+        free(vm_entry);
+        return true;
+    }
+    return false;
+}
+```
+> **if(vm != NULL && vm_entry != NULL){ }**<br>
+> - If both vm and vm_entry are not NULL, the code proceeds to call hash_delete with the vm hash table and &vm_entry->elem. &vm_entry->elem is the address of the hash_elem member within the vm_entry structure. It serves as the key for locating the element to be deleted in the hash table.<br>
+> - The hash_delete function attempts to remove the element with a matching key from the hash table. If the deletion is successful, hash_delete returns true; otherwise, it returns false.<br>
+
+<br>
+
+### To-do 7. Add find_vme(). (vm/page.\*) <br>
+```C
+struct vm_entry *find_vme (void *vaddr){
+    struct vm_entry vme;
+    struct hash_elem *e;
+
+    if (vaddr != NULL){
+        vme.vaddr = pg_round_down(vaddr);
+        struct thread *cur = thread_current();
+
+        if (pg_ofs(vme.vaddr) == 0){
+            e = hash_find(&cur->vm, &vme.elem);  
+        }
+    }
+
+    if (e != NULL){
+        struct vm_entry *res = hash_entry(e, struct vm_entry, elem);
+        return res;
+    }
+    else {
+        return NULL;
+    }
+}
+```
+> **vme.vaddr = pg_round_down (vaddr)**<br>
+> - vme.addr is page number of vme.<br>
+> - The vme.vaddr member is assigned the rounded-down value of ‘vaddr’ using pg_round_down(). This ensures that the virtual address is aligned to the page boundary.<br>
+> - The function checks if the offset of vme.vaddr is 0 using pg_ofs(vme.vaddr). This condition verifies if the vme.vaddr represents the starting address of a page.
+If the offset is 0, indicating that vme.vaddr is a valid starting address of a page, the function calls hash_find() with the hash table &cur->vm and the address of vme.elem as the key. This searches for an entry in the hash table with a matching key.<br>
+
+> **if (e != NULL){ }**<br>
+> - If the search is successful (e is not NULL), the code retrieves the corresponding vm_entry structure using hash_entry(). It passes e as the hash element pointer, struct vm_entry as the structure type, and elem as the name of the hash_elem member within struct vm_entry. This gives the correct offset to access the vm_entry structure from the hash_elem.<br>
+> - Finally, if a matching vm_entry structure is found, it is returned. Otherwise, NULL is returned to indicate that the vm_entry could not be found in the hash table.<br>
+
+<br>
+
+### To-do 8. Add vm_destroy(). (vm/page.\*) <br>
+**Implement vm_destroy_func()**<br>
+```C
+void vm_destroy_func (struct hash_elem *e, void *aux){
+    if (e != NULL){
+        struct vm_entry *vme = hash_entry(e, struct vm_entry, elem);
+        free_page(pagedir_get_page(thread_current()->pagedir, vme->vaddr));
+        free(vme);
+    }
+}
+```
+> - After the assertion, use hash_entry to obtain a pointer to the parent structure containing e. In this case, it retrieves a pointer to the vm_entry structure associated with e.<br>
+> - Then proceed to free the page associated with the vm_entry using free_page. It calls pagedir_get_page to retrieve the kernel virtual address corresponding to the user virtual address stored in vme->vaddr. This allows accessing the physical page associated with the user virtual address. The free_page function frees the physical page.<br>
+> - Finally, call free() to release the memory occupied by the vm_entry structure itself. <br>
+
+**Implementaion vm_destroy() using vm_destroy_func()**<br>
+```C
+void vm_destroy (struct hash *vm){
+    if(vm != NULL){
+        hash_destroy(vm, vm_destroy_func);
+    }
+}
+```
+> **hash_destroy(vm, vm_destroy_func)**<br>
+> - Use the hash_destroy() function to remove bucket lists and vm_entries from the hash table.<br>
+
+<br>
+
+### To-do 9. Add vm hash table structure in thread structure and add code to initialize hash table.** (threads/thread.\* , userprog/process.\*) <br>
+####thread.h <br>
+```C
+struct thread
+  {
+
+...
+struct hash vm;
+...
+
+}
+```
+<br>
+####process.c <br>
+```C
+static void
+start_process (void *file_name_)
+{
+...
+
+  vm_init(&cur->vm);
+
+...
   }
-  if(!pagedir_get_page(cur->pagedir, addr)==NULL){
-    return -1;
+```
+> - Initialize by adding the vm_init() function.<br>
+
+<br>
+
+### To-do 10. Modify process_exit(). (userprog/process.\*) <br>
+```C
+void
+process_exit (void)
+{
+...
+
+  vm_destroy(&cur->vm);
+
+...
+}
+```
+> - Use the hash_destroy() function to remove bucket lists and vm_entries from the hash table.<br>
+
+<br>
+
+### To-do 11. Modify load_segment(). (userprog/procecss.\*) <br>
+```C
+static bool
+load_segment (struct file *file, off_t ofs, uint8_t *upage,
+              uint32_t read_bytes, uint32_t zero_bytes, bool writable) 
+{
+
+...
+
+  file_seek (file, ofs);
+  while (read_bytes > 0 || zero_bytes > 0) 
+    {
+      /* Calculate how to fill this page.
+         We will read PAGE_READ_BYTES bytes from FILE
+         and zero the final PAGE_ZERO_BYTES bytes. */
+      size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
+      size_t page_zero_bytes = PGSIZE - page_read_bytes;
+
+      struct vm_entry *vm_ent = (struct vm_entry *)malloc(sizeof(struct vm_entry));
+      if (vm_ent == NULL){
+        return false;
+      }
+
+      vm_ent -> type = VM_BIN;
+      vm_ent -> vaddr = upage;
+      vm_ent -> writable = writable;
+      vm_ent -> file = file;
+      vm_ent -> offset = ofs;
+      vm_ent -> read_bytes = read_bytes;
+      vm_ent -> zero_bytes = zero_bytes;
+
+      insert_vme(&thread_current()->vm, vm_ent);
+
+      read_bytes -= page_read_bytes;
+      zero_bytes -= page_zero_bytes;
+      ofs += page_read_bytes;
+      upage += PGSIZE;
+    }
+  return true;
+}
+```
+> **load_segment(){ }**<br>
+> - The load_segment() function reads the data and code segments and the setup_stack() function assigns a physical page to the stack.<br>
+> - Raising all segments of a disk image causes waste of physical memory, so in the process of initializing the virtual address space of the modified pintos, instead of allocating physical memory, only information to be loaded through vm_entry per virtual page.<br>
+
+> Remove the part that mounts memory in the process virtual address space<br>
+
+> **struct vm_entry \*vm_ent = (struct vm_entry \*)malloc(sizeof(struct vm_entry))**<br>
+> - Create a vm_entry using the malloc function that allocates memory.<br>
+
+> Add allocation of vm_entry structure, field value initialization, and hash table insertion using insert_vme().<br>
+
+<br>
+
+### To-do 12. Modify setup_stack().** (userprog/process.\*) <br>
+```C
+static bool
+setup_stack (void **esp) 
+{
+
+...
+  if (kpage != NULL) 
+    {
+
+          memset (vm_ent, 0, sizeof(struct vm_entry));
+          vm_ent -> type = VM_ANON;
+          vm_ent -> writable = true;
+          vm_ent -> is_loaded = true;
+          vm_ent -> vaddr = ((uint8_t *) PHYS_BASE) - PGSIZE;
+
+          insert_vme(&thread_current()->vm, kpage->vme);
+      }
+...
+}
+```
+> **setup_stack(){ }**<br>
+> - The existing setup_stack() function that initializes the stack allocates a single page, sets the page table, and sets the stack pointer (esp).<br>
+> - The setup_stack() function creates a vm_entry of a 4kb stack, initializes the field value of the created vm_entry, and modifies it to insert into the vm hash table.<br>
+
+<br>
+
+### To-do 13. Add address_check().** (userprog/syscall.\*) <br>
+```C
+static struct vm_entry
+*address_check (void *addr, void *esp)
+{
+  if (!(is_user_vaddr (addr)) || addr <= (void *)0x08048000UL){
+    exit (-1);
   }
+
+  if (!find_vme (addr))
+    {   
+      exit(-1);
+    }
+  return find_vme(addr);
 }
 ```
 > **Verify the validity of a user-provided pointer** <br>
 > - **check if call is_user_vaddr(addr) is False** <br>
 >   - addr == NULL : <br>
 >   - is_user_vaddr(addr) : check if <br>
-> - **check if the user virtual address is mapped** <br>
->   - pagedir_get_page(cur->pagedir, addr) : returns the kernel virtual address corresponding to that physical address, <br>
->                                            or a null pointer if UADDR is unmapped.  <br>
->   
-> - **int cnt** <br>
->   add a variable to count the number of the tokens, that is, argc <br>
-> - **strtok_r(file_name, " ", &save_ptr)** <br>
->   saparate a stiring into tokens by a certain delimeter. <br>
->   <br>
-> - **while** tmp is not NULL(=there is any argument left), <br>
->   - save each token to argv[cnt] <br>
->   - increment cnt by 1 <br>
-<br> 
 
-> **Save tokens in user stack** <br>
-> - **call argument_user_stack()** <br>
->   argument_user_stack(argv, cnt, &if_.esp) : stack up arguments in *argv* with the number of *cnt* on user stack. newly created function, described below. <br>
-> - **call hex_dump()** <br>
->   hex_dump(if_.esp, if_.esp, PHYS_BASE- if_.esp, true) : debugging tool to show the contents of the stack.
-<br>
+> - Use vm_entry to perform validation operations and modify them to return vm_entry.<br>
+
+> **find_vme(addr)**<br>  
+> - return the address using find_vme().<br>
+
 <br>
 
-### To-do 3. Add argument_user_stack() function. (userprog/process.\*) <br>
-#### - process.h
-
-``` C
-...
-
-void argument_user_stack(char **agrv,int argc,void **esp);
-
-...
-```
-<br>
-
-> **Declare the argument_user_stack() function in process.h** <br>
-
-
-#### - process.c
+### To-do 14. Add check_buffer().** (userprog/syscall.\*) <br>
 ```C
-void argument_user_stack(char **argv,int argc,void **esp){
-  char *argv_address[argc];
-  int length = 0;
-
+static void
+*check_buffer (void *buf, unsigned size, void *esp)
+{
   int i;
-
-  for (i = argc -1; i >= 0; i--){
-    int instruction_size = strlen(argv[i])+1;
-    *esp -= instruction_size;
-    memcpy(*esp, argv[i], instruction_size);
-    length += instruction_size;
-    argv_address[i]=*esp;
-  }
-
-  if (length % 4 != 0){
-    for (i = (4 - (length % 4)); i > 0; i--){
-      *esp -= 1;
-      **(char **)esp = 0;
+  for (i=buf; i <= buf + size; i++){
+    struct vm_entry *vme;
+    vme = address_check(buf, esp);
+    if (vme == NULL){
+      exit(-1);
+    }
+    if (vme->writable != true){
+      exit(-1);
     }
   }
-
-  *esp = *esp - 4;
-  **(char **)esp = 0;
-
-  for (i = argc -1; i >= 0; i--){
-    *esp -= 4;
-    memcpy(*esp, &argv_address[i], strlen(&argv_address[i]));
-  }
-
-  *esp = *esp - 4;
-  *(char **)(*esp) = (*esp+4);
-
-  *esp = *esp - 4;
-  **(char **)esp = argc; 
-
-  *esp = *esp - 4;
-  **(char **)esp = 0;                         
 }
 ```
-> **Stack the arguments on the user stack** <br>
-> - **char \*argv_address[argc]** <br>
->   add an array to store the address of argv[] <br>
-> - **int length** <br>
->   add a variable whose value is the total length of the instruction <br>
-> - **stack arguments(String)** <br>
->   : save each argument from the top of the stack to the bottom
->   - for (i = argc -1; i >= 0; i--), <br>
->     - decrement the esp by the size of the argument <br>
->     - copy the memory content of argv to esp <- stack up the argument on user stack <br>
->     - set address_argv[i] to be the esp at that time when argv[i] is loaded on to the user stack <br>
-> - **word align** <br>
->   : for the performance, add padding after finishing saving arguments <br>
->   - if (length % 4 != 0), <br>
->     - fill 0 to stack until the total length of the block becomes multiple of 4 <br>
-> - **stack arguments' addresses(char \*)** <br>
->   : stack the address of each argument saved the userstack <br>
->   because user register is 4 byte units based, down the esp by 4 every for each iteration <br>
->   use argv_address[i] to get the address of each argument in user stack <br>
-> - **main(int argc, char \*\*argv)** <br>
->   : stack the address of the address of the first argument, and argc <br>
-> - **return address** <br>
->   : stack 0 as the fake address
+>**for (i=buf\; i <= buf + size\; i++){ }**<br>
+> - It applies to vm_entries included in addresses up to buffer + size.<br>
+
+> **vme = address_check(buf, esp);**<br>
+> - The check_valid_buffer() function checks the user area of the address through the check_address() function and receives the vm_entry structure because the size from buffer to buffer + size entered as a factor may exceed the size of a page.<br>
+
+> **if (vme->writable != true){ }**<br>
+> - Checks whether vm_entry exists for that address and if the writable member of the vm_entry is true.<br>
+
 <br>
 
-### To-do 4. Modify setup_stack() function. (userprog/process.\*) <br>
-#### - process.h
-``` C
-...
-
-static bool setup_stack (void **esp);
-
-...
-```
-<br>
-
-> **Modify the declaration of setup_stack() function in process.h** <br>
-
-#### - process.c
-
-``` C
-...
-
-static bool
-setup_stack (void **esp) 
+### To-do 15. Modify syscall_handler(). (userprog/syscall.\*) <br>
+```C
+static void
+syscall_handler (struct intr_frame *f)
 {
-  uint8_t *kpage;
-  bool success = false;
-
-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-  if (kpage != NULL) 
+  uint32_t *esp;
+  esp = f->esp;
+  if (!is_valid_ptr (esp) || !is_valid_ptr (esp + 1) ||
+      !is_valid_ptr (esp + 2) || !is_valid_ptr (esp + 3))
     {
-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
-        *esp = PHYS_BASE;
-      else
-        palloc_free_page (kpage);
+      exit (-1);
     }
-  return success;
-} 
-
-...
+  else
+    {
+      int syscall_number = *esp;
+      switch (syscall_number)
+        {
+        case SYS_HALT:
+          halt ();
+          break;
+        case SYS_EXIT:
+          address_check(esp + 1, esp);
+          exit (*(esp + 1));
+          break;
+        case SYS_EXEC:
+          address_check(esp + 1, esp);
+          f->eax = exec ((char *) *(esp + 1));
+          break;
+        case SYS_WAIT:
+          address_check(esp + 1, esp);
+          f->eax = wait (*(esp + 1));
+          break;
+        case SYS_CREATE:
+          address_check(esp + 1, esp);
+          address_check(esp + 2, esp);
+          f->eax = create ((char *) *(esp + 1), *(esp + 2));
+          break;
+        case SYS_REMOVE:
+          address_check(esp + 1, esp);
+          f->eax = remove ((char *) *(esp + 1));
+          break;
+        case SYS_OPEN:
+          address_check(esp + 1, esp);
+          f->eax = open ((char *) *(esp + 1));
+          break;
+        case SYS_FILESIZE:
+          address_check(esp + 1, esp);
+	        f->eax = filesize (*(esp + 1));
+	        break;
+        case SYS_READ:
+          address_check(esp + 1, esp);
+          address_check(esp + 2, esp);
+          address_check(esp + 3, esp);
+          check_buffer((void *) *(esp + 2), *(esp + 3), esp);
+          f->eax = read (*(esp + 1), (void *) *(esp + 2), *(esp + 3));
+          break;
+        case SYS_WRITE:
+          address_check(esp + 1, esp);
+          address_check(esp + 2, esp);
+          address_check(esp + 3, esp);
+          check_buffer((void *) *(esp + 2), *(esp + 3), esp);
+          f->eax = write (*(esp + 1), (void *) *(esp + 2), *(esp + 3));
+          break;
+        case SYS_SEEK:
+          address_check(esp + 1, esp);
+          address_check(esp + 2, esp);
+          seek (*(esp + 1), *(esp + 2));
+          break;
+        case SYS_TELL:
+          address_check(esp + 1, esp);
+          f->eax = tell (*(esp + 1));
+          break;
+        case SYS_CLOSE:
+          address_check(esp + 1, esp);
+          close (*(esp + 1));
+          break;
+        case SYS_MMAP:
+          address_check(esp + 1, esp);
+          address_check(esp + 2, esp);
+          f->eax = mmap(*(esp + 1), (void *) *(esp + 2));
+          break;
+        case SYS_MUNMAP:
+          address_check(esp + 1, esp);
+          munmap(*(esp + 1));
+          break;
+        default:
+          break;
+        }
+    }
+}
 ```
+> Add address_check() and check_buffer approprietly before calling system call.<br>
+
 <br>
 
-> **Make setup_stack() compatible with argument_user_stack()** <br>
+### To-do 16. Modify syscall_handler(). (userprog/syscall.\*) <br>
+```C
+
+```
