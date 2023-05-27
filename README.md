@@ -68,8 +68,8 @@ pintos/src/vm/swap.* <br>
      : remove file. <br>  
 
 - **Add handle_mm_fault().** (userprog/process.\*) <br>
-     : Assign a physical page when a page fault occurs.
-     : Load files on disk into physical pages by calling load_file().
+     : Assign a physical page when a page fault occurs.<br> 
+     : Load files on disk into physical pages by calling load_file().<br> 
      : Map virtual and physical addresses to page tables when loading into physical memory is complete. <br>  
      
 - **Add a function to handle when a page fault occurs.** (userprog/exeption.\*) <br>
