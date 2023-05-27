@@ -308,11 +308,11 @@ void vm_destroy (struct hash *vm){
 
 <br>
 
-### To-do 9. Add vm hash table structure in thread structure and add code to initialize hash table.** (threads/thread.\* , userprog/process.\*) <br>
-####thread.h <br>
+### To-do 9. Add vm hash table structure in thread structure and add code to initialize hash table. (threads/thread.\* , userprog/process.\*) <br>
+#### thread.h <br>
 ```C
 struct thread
-  {
+{
 
 ...
 struct hash vm;
@@ -321,7 +321,9 @@ struct hash vm;
 }
 ```
 <br>
-####process.c <br>
+
+#### process.c <br>
+
 ```C
 static void
 start_process (void *file_name_)
@@ -407,7 +409,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
 <br>
 
-### To-do 12. Modify setup_stack().** (userprog/process.\*) <br>
+### To-do 12. Modify setup_stack(). (userprog/process.\*) <br>
 ```C
 static bool
 setup_stack (void **esp) 
@@ -434,7 +436,7 @@ setup_stack (void **esp)
 
 <br>
 
-### To-do 13. Add address_check().** (userprog/syscall.\*) <br>
+### To-do 13. Add address_check(). (userprog/syscall.\*) <br>
 ```C
 static struct vm_entry
 *address_check (void *addr, void *esp)
@@ -462,7 +464,7 @@ static struct vm_entry
 
 <br>
 
-### To-do 14. Add check_buffer().** (userprog/syscall.\*) <br>
+### To-do 14. Add check_buffer(). (userprog/syscall.\*) <br>
 ```C
 static void
 *check_buffer (void *buf, unsigned size, void *esp)
@@ -612,7 +614,7 @@ bool load_file (void *kaddr, struct vm_entry *vm_entry){
 
 <br>
 
-### To-do 17. Add handle_mm_fault().** (userprog/process.\*) <br>
+### To-do 17. Add handle_mm_fault(). (userprog/process.\*) <br>
 ```C
 bool handle_mm_fault(struct vm_entry *vme){
   struct page *pg;
