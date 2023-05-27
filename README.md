@@ -66,9 +66,6 @@ pintos/src/vm/swap.* <br>
 
 - **Add load_file().** (vm/page.\*) <br>
      : Load pages that exist on disk into physical memory. <br>
-     
-- **Add install_page().** (vm/page.\*) <br>
-     : Map physical and virtual addresses to page tables. <br>  
 
 - **Add handle_mm_fault().** (userprog/process.\*) <br>
      : Assign a physical page when a page fault occurs.<br> 
@@ -589,7 +586,130 @@ syscall_handler (struct intr_frame *f)
 
 <br>
 
-### To-do 16. Modify syscall_handler(). (userprog/syscall.\*) <br>
+### To-do 16. Add load_file(). (vm/page.\*) <br>
 ```C
+bool load_file (void *kaddr, struct vm_entry *vm_entry){
+    if (kaddr == NULL || vm_entry == NULL || vm_entry -> type == VM_ANON){
+        return false;
+    }
+    if (file_read_at(vm_entry->file, kaddr, vm_entry->read_bytes, vm_entry->offset) != (int) vm_entry->read_bytes){
+        return false;
+    }
+
+    memset(kaddr + (vm_entry->read_bytes), 0, vm_entry->zero_bytes);
+    return true;
+}
+```
+> **load_file (void \*kaddr, struct vm_entry \*vm_entry){ }**<br>
+> - load_file() is a function that loads pages existing on disk into physical memory.<br>
+
+> **if (file_read_at(vm_entry->file, kaddr, vm_entry->read_bytes, vm_entry->offset) != (int) vm_entry->read_bytes){ }**<br>
+> - It is necessary to implement a function that reads one page as kaddr as a file and offset in vme.<br>
+> - Use the file_read_at() function or the file_read() + file_seek() function to read a file entered as a factor.<br>
+
+> **memset(kaddr + (vm_entry->read_bytes), 0, vm_entry->zero_bytes)**<br>
+> - If file couldn't be writed all 4KB, fill the rest with zero.<br>
+
+<br>
+
+### To-do 17. Add handle_mm_fault().** (userprog/process.\*) <br>
+```C
+bool handle_mm_fault(struct vm_entry *vme){
+  struct page *pg;
+  pg = alloc_page(PAL_USER);
+  if(pg == NULL ||vme == NULL){
+    return;
+  }
+  pg->vme = vme;
+
+  bool success;
+
+  switch (vme->type){
+    case VM_BIN:
+      success = load_file(pg->kaddr, vme);
+      if(!success){
+        free_page(pg->kaddr);
+        return false;
+      }
+      break;
+    case VM_FILE:
+      success = load_file(pg->kaddr, vme);
+      if(!success){
+        free_page(pg->kaddr);
+        return false;
+      }
+          
+    case VM_ANON:
+      swap_in(vme->swap_slot, pg->kaddr);
+      break;
+  }
+
+  if(!install_page (vme->vaddr, pg->kaddr, vme->writable)){
+    free_page(pg->kaddr);
+    return false;
+  }
+  vme->is_loaded = true;
+  add_page_to_lru_list(pg);
+
+  return true;
+  
+}
+```
+> **handle_mm_fault(struct vm_entry \*vme){ }**<br>
+> - The handle_mm_fault() is a function called for handling when a page fault occurs.<br>
+> - Assign a physical page when a page fault occurs.<br>
+> - Returns the success or failure of the load in the bool data type.<br>
+
+> **pg = alloc_page(PAL_USER)**<br>
+> - Allocate physical memory to page.<br>
+
+> **switch () { }**<br>
+> - It is processed according to the type of vm_entry with a switch statement. For VM_BIN binary files, call load_file() and load it into physical memory.<br>
+
+> **load_file()**<br>
+> - to load files on disk onto physical pages.<br>
+
+>**install_page()**<br>
+> - to complete loading in physical memory, the virtual address and physical address are mapped to a page table.<br>
+
+<br>
+
+### To-do 18. Modify page_fault(). (userprog/exeption.\*) <br>
+```C
+static void
+page_fault (struct intr_frame *f) 
+{
+
+ ...
+ 
+  struct vm_entry *vme;
+  if (not_present != true){
+    exit(-1);
+  }
+  vme = find_vme(fault_addr);
+  if (vme == NULL){
+    if (!verify_stack((int32_t) fault_addr, f->esp)){
+      exit(-1);
+    }
+    expand_stack(fault_addr);
+    return ;
+  }
+  if (!handle_mm_fault(vme)){
+    exit(-1);
+  }
+}
+
+...
 
 ```
+> **page_fault (struct intr_frame \*f) { }**<br>
+> - The existing page_fault() process unconditionally generates a "segmentation fault" when an error occurs after permission and address validation, and kills(-1) to terminate it.<br>
+> - Delete the command to kill(-1) to terminate.<br>
+
+> **if (!verify_stack((int32_t) fault_addr, f->esp)) { }**<br>
+> - validate fault_addr using verify_stack().
+
+> **if (!handle_mm_fault(vme)) { }**<br>
+> - Calls the page fault handler function handle_mm_fault().<br>
+
+<br>
