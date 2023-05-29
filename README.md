@@ -218,14 +218,23 @@ void munmap (int mapid){
 ### To-do 5. Modify handle_mm_fault(). (userprog/process.\*) <br>
 
 ```C
-void vm_init (struct hash *vm){
-    if (vm != NULL){
-        hash_init(vm, vm_hash_func, vm_less_func, NULL);
-    }
+bool handle_mm_fault(struct vm_entry *vme){
+    ...
+    case VM_FILE:
+      success = load_file(pg->kaddr, vme);
+      if(!success){
+        free_page(pg->kaddr);
+        return false;
+      }
+      break;
+    ...
 }
 ```
-> **Reasons for using hash** <br>
-> - vm_entries should be managed in a bundle so that they can be navigated.<br>
+> **Modify VM_FILE case to support memory mapped file demand paging** <br>
+> - success = load_file(pg->kaddr, vme)<br>
+>   : If a type of the vm_entry is VM_FILE, load the data <br>
+> - if(!success){}<br>
+>   : if it doesn't success, free the page for pg->kaddr and return false<br>
 
 <br>
 
