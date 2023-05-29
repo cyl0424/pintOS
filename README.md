@@ -542,16 +542,14 @@ bool handle_mm_fault(struct vm_entry *vme){
 }
 ```
 > **setup_stack()**<br>
-> - replace palloc_get_page() with alloc_page(). <br>
-> - replace palloc_free_page() with free_page(). <br>
-> <br>
+> - replace palloc_get_page() with alloc_page().<br>
+> - replace palloc_free_page() with free_page().<br>
 > **do_munmap()**<br>
-> - replace palloc_get_page() with alloc_page(). <br>
-> - replace palloc_free_page() with free_page(). <br>
-> <br>
+> - replace palloc_get_page() with alloc_page().<br>
+> - replace palloc_free_page() with free_page().<br>
 > **handle_mm_fault()**<br>
-> - replace palloc_get_page() with alloc_page(). <br>
-> - replace palloc_free_page() with free_page(). <br>
+> - replace palloc_get_page() with alloc_page().<br>
+> - replace palloc_free_page() with free_page().<br>
 <br>
 
 ### To-do 13. Modify handle_mm_fault(). (userprog/process.\*)
