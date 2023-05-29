@@ -587,6 +587,7 @@ bool load_file (void *kaddr, struct vm_entry *vm_entry){
 
 
 <br>
+
 ### To-do 12. Replace allocation and deallocation functions. <br>
 
 ```C
