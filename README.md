@@ -144,140 +144,153 @@ void del_page_from_lru_list (struct page *page){
 
 ### To-do 5. Add struct page \*alloc_page(). (vm/page.\*) <br>
 ```C
-bool insert_vme (struct hash *vm, struct vm_entry *vm_entry){
-    if(vm != NULL && vm_entry != NULL && pg_ofs(vm_entry->vaddr)==0){
-        vm_entry->pinned_flag = false;
-        bool res = (hash_insert(vm, &vm_entry->elem) == NULL);
-        return res;
+struct page *alloc_page (enum palloc_flags flag){
+    lock_acquire(&lru_list_lock);
+    int *kpage;
+    kpage = palloc_get_page(flag);
+    while (kpage == NULL){
+        free_victim_page(flag);
+        kpage = palloc_get_page(flag);
     }
-    return false;
+
+    struct page *page;
+    page = (struct page *)malloc(sizeof(struct page));
+    page->kaddr = kpage;
+    page->t = thread_current();
+
+    add_page_to_lru_list(page);
+    lock_release(&lru_list_lock);
+
+    return page;
 }
 ```
-> **if(vm != NULL && vm_entry != NULL && pg_ofs(vm_entry->vaddr)==0){ }**<br>
-> - if the vm pointer is not NULL, indicating that the hash table is valid and exists.<br>
-> - if the vm_entry pointer is not NULL, indicating that the entry to be inserted is valid and exists.<br>
-> - if the ‘vaddr’ field of vm_entry is aligned to a page boundary by using the pg_ofs macro and checking if it equals 0. This condition ensures that the ‘vaddr’ is properly aligned.<br>
-
-> **bool res = (hash_insert(vm, \&vm_entry->elem) == NULL)**<br>
-> - If all three conditions are satisfied, the code proceeds to call the hash_insert function, passing the vm hash table and the elem member of vm_entry as arguments. The hash_insert function attempts to insert the element into the hash table.<br>
-> - The result of the hash_insert function is then compared to NULL using the equality (==) operator. If the result is NULL, it indicates that the insertion was successful, and the function returns true. Otherwise, if the result is not NULL, it means that there was already an element with the same key in the hash table, and the function returns false.<br>
+> **The function allocates a page of memory and returns a pointer to the allocated page struct.** <br>
+> 1. It acquires the lru_list_lock to ensure exclusive access to the LRU list and other relevant data structures.
+>
+> 2. It declares an integer pointer kpage to hold the kernel virtual address of the allocated page.
+>
+> 3. It calls palloc_get_page with the specified flag to attempt to allocate a page. If the allocation is unsuccessful (i.e., kpage is NULL), it proceeds with the following actions:
+>
+> a. It calls free_victim_page to free up a page from memory, considering the specified allocation flag.
+>
+> b. It attempts to allocate a page again by calling palloc_get_page once more and assigns the result to kpage.
+>
+> 4. It declares a page pointer page and allocates memory for the page struct using malloc. The size of the allocation is determined by sizeof(struct page).
+>
+> 5. It assigns the kpage value to page->kaddr, representing the kernel virtual address of the allocated page.
+> 
+> 6. It assigns the current thread (thread_current()) to page->t, indicating the thread that owns or is associated with the allocated page.
+> 
+> 7. It adds the page to the LRU list by calling add_page_to_lru_list(page). This ensures proper tracking and ordering of the page based on its usage.
+>
+> 8. It releases the lru_list_lock to allow other threads to access the LRU list and related data structures.
+>
+> 9. Finally, it returns the page pointer, providing the caller with a reference to the allocated page.
 
 <br>
 
-### To-do 6. Add delete_vme(). (vm/page.\*) <br>
+### To-do 6. __free_page(). (vm/page.\*) <br>
 ```C
-bool delete_vme (struct hash *vm, struct vm_entry *vm_entry){
-    if(vm != NULL && vm_entry != NULL){
-        if(!hash_delete(vm, &vm_entry->elem)){
-            return false;
-        };
-
-        free_page(pagedir_get_page(thread_current()->pagedir, vm_entry->vaddr));
-        free(vm_entry);
-        return true;
-    }
-    return false;
+void __free_page (struct page *p){
+    del_page_from_lru_list(p);
+    pagedir_clear_page(p->t->pagedir, pg_round_down(p->vme->vaddr));
+    palloc_free_page(p->kaddr);
+    free(p);
 }
 ```
-> **if(vm != NULL && vm_entry != NULL){ }**<br>
-> - If both vm and vm_entry are not NULL, the code proceeds to call hash_delete with the vm hash table and &vm_entry->elem. &vm_entry->elem is the address of the hash_elem member within the vm_entry structure. It serves as the key for locating the element to be deleted in the hash table.<br>
-> - The hash_delete function attempts to remove the element with a matching key from the hash table. If the deletion is successful, hash_delete returns true; otherwise, it returns false.<br>
+
+> **The function frees a page of memory and performs cleanup operations.** <br>
+> 1. It removes the page from the LRU (Least Recently Used) list by calling del_page_from_lru_list(p). This action detaches the page from the LRU order.
+>
+> 2. It clears the page entry in the page directory (pagedir_clear_page) associated with the thread (p->t) that owns or is associated with the page. This step removes the mapping between the virtual address (p->vme->vaddr) and the physical frame of the page.
+>
+> 3. It frees the physical frame of the page by calling palloc_free_page(p->frame). This action releases the allocated memory of the page.
+> 
+> 4. It frees the memory occupied by the page struct itself by calling free(p). This step ensures that the memory used by the struct is deallocated and can be reused.
 
 <br>
 
-### To-do 7. Add find_vme(). (vm/page.\*) <br>
+### To-do 7. Add swap_init(). (vm/swap.\*) <br>
 ```C
-struct vm_entry *find_vme (void *vaddr){
-    struct vm_entry vme;
-    struct hash_elem *e;
+struct lock swap_lock;
+struct bitmap *swap_bitmap;
 
-    if (vaddr != NULL){
-        vme.vaddr = pg_round_down(vaddr);
-        struct thread *cur = thread_current();
+void swap_init(size_t size){
+    lock_init(&swap_lock);
+    swap_bitmap = bitmap_create(size);
+}
+```
+> **The swap_init function initializes the swap space by initializing a lock and creating a swap bitmap to manage the swap slots.**<br>
+> 1. It initializes a lock called swap_lock using lock_init. This lock is likely used to synchronize access to the swap space.
+>
+> 2. It creates a swap bitmap using bitmap_create with the specified size. The swap bitmap is used to track the availability of swap slots in the swap space.
 
-        if (pg_ofs(vme.vaddr) == 0){
-            e = hash_find(&cur->vm, &vme.elem);  
+<br>
+
+
+### To-do 8. Add swap_in(). (vm/swap.\*) <br>
+```C
+void swap_in(size_t index, void *kaddr){
+    lock_acquire(&swap_lock);
+    struct block *swap_block = block_get_role(BLOCK_SWAP);
+    if(bitmap_test(swap_bitmap, index)){
+        int i;
+        for(i=0; i<PGSIZE/BLOCK_SECTOR_SIZE; i++){
+            block_read(swap_block, PGSIZE/BLOCK_SECTOR_SIZE*index + i, BLOCK_SECTOR_SIZE*i+kaddr);
         }
+        bitmap_reset(swap_bitmap, index);
     }
-
-    if (e != NULL){
-        struct vm_entry *res = hash_entry(e, struct vm_entry, elem);
-        return res;
-    }
-    else {
-        return NULL;
-    }
+    lock_release(&swap_lock);
 }
 ```
-> **vme.vaddr = pg_round_down (vaddr)**<br>
-> - vme.addr is page number of vme.<br>
-> - The vme.vaddr member is assigned the rounded-down value of ‘vaddr’ using pg_round_down(). This ensures that the virtual address is aligned to the page boundary.<br>
-> - The function checks if the offset of vme.vaddr is 0 using pg_ofs(vme.vaddr). This condition verifies if the vme.vaddr represents the starting address of a page.
-If the offset is 0, indicating that vme.vaddr is a valid starting address of a page, the function calls hash_find() with the hash table &cur->vm and the address of vme.elem as the key. This searches for an entry in the hash table with a matching key.<br>
-
-> **if (e != NULL){ }**<br>
-> - If the search is successful (e is not NULL), the code retrieves the corresponding vm_entry structure using hash_entry(). It passes e as the hash element pointer, struct vm_entry as the structure type, and elem as the name of the hash_elem member within struct vm_entry. This gives the correct offset to access the vm_entry structure from the hash_elem.<br>
-> - Finally, if a matching vm_entry structure is found, it is returned. Otherwise, NULL is returned to indicate that the vm_entry could not be found in the hash table.<br>
+> **The function swaps in a page from the swap space to the provided kernel virtual address (kaddr).**
+> 1. It acquires the swap_lock to ensure exclusive access to the swap space.
+>
+> 2. It retrieves the swap_block associated with the swap space.
+> 
+> 3. If the specified index in the swap_bitmap indicates that the swap slot is occupied (i.e., the bit is set), it proceeds with the following actions:
+>
+> a. It iterates through each sector within the page size (PGSIZE) and reads the corresponding data from the swap_block into the kernel virtual address (kaddr).
+>
+> b. It resets the bit for the index in the swap_bitmap, indicating that the swap slot is now available.
+>
+> 4. Finally, it releases the swap_lock to allow other threads to access the swap space.
 
 <br>
 
-### To-do 8. Add vm_destroy(). (vm/page.\*) <br>
-**Implement vm_destroy_func()**<br>
+### To-do 9. Add swap_out(). (vm/swap.\*) <br>
 ```C
-void vm_destroy_func (struct hash_elem *e, void *aux){
-    if (e != NULL){
-        struct vm_entry *vme = hash_entry(e, struct vm_entry, elem);
-        free_page(pagedir_get_page(thread_current()->pagedir, vme->vaddr));
-        free(vme);
+size_t swap_out(void *kaddr){
+    lock_acquire(&swap_lock);
+    struct block *swap_block = block_get_role(BLOCK_SWAP);
+
+    size_t swap_index = bitmap_scan(swap_bitmap, 0, 1, false);
+
+    if(BITMAP_ERROR != swap_index){
+        int i;
+        for(i=0; i<PGSIZE/BLOCK_SECTOR_SIZE; i++){
+            block_write(swap_block, PGSIZE/BLOCK_SECTOR_SIZE*swap_index + i, BLOCK_SECTOR_SIZE*i+kaddr);
+        }
+        bitmap_set(swap_bitmap, swap_index, true);
     }
+    lock_release(&swap_lock);
+    return swap_index;
 }
 ```
-> - After the assertion, use hash_entry to obtain a pointer to the parent structure containing e. In this case, it retrieves a pointer to the vm_entry structure associated with e.<br>
-> - Then proceed to free the page associated with the vm_entry using free_page. It calls pagedir_get_page to retrieve the kernel virtual address corresponding to the user virtual address stored in vme->vaddr. This allows accessing the physical page associated with the user virtual address. The free_page function frees the physical page.<br>
-> - Finally, call free() to release the memory occupied by the vm_entry structure itself. <br>
-
-**Implementaion vm_destroy() using vm_destroy_func()**<br>
-```C
-void vm_destroy (struct hash *vm){
-    if(vm != NULL){
-        hash_destroy(vm, vm_destroy_func);
-    }
-}
-```
-> **hash_destroy(vm, vm_destroy_func)**<br>
-> - Use the hash_destroy() function to remove bucket lists and vm_entries from the hash table.<br>
-
-<br>
-
-### To-do 9. Add vm hash table structure in thread structure. (threads/thread.\* , userprog/process.\*) <br>
-#### thread.h <br>
-```C
-struct thread
-{
-
-...
-struct hash vm;
-...
-
-}
-```
-<br>
-> - Add hash struct 'vm' to structure 'thread'.<br>
-
-#### process.c <br>
-
-```C
-static void
-start_process (void *file_name_)
-{
-...
-
-  vm_init(&cur->vm);
-
-...
-  }
-```
-> - Initialize by adding the vm_init() function.<br>
+> **The function swaps out a page from the provided kernel virtual address (kaddr) to the swap space.**
+> 1. It acquires the swap_lock to ensure exclusive access to the swap space.
+>
+> 2. It retrieves the swap_block associated with the swap space.
+>
+> 3. It scans the swap_bitmap to find an available swap slot index using bitmap_scan. The index is stored in the swap_index variable.
+> 
+> 4. If a valid swap_index is found (not equal to BITMAP_ERROR), it proceeds with the following actions:
+>
+> a. It iterates through each sector within the page size (PGSIZE) and writes the corresponding data from the kernel virtual address (kaddr) to the respective sectors in the swap_block.
+>
+> b. It sets the bit for the swap_index in the swap_bitmap, indicating that the swap slot is now occupied.
+>
+> 5. Finally, it releases the swap_lock, allowing other threads to access the swap space, and returns the swap_index.
 
 <br>
 
