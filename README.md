@@ -18,45 +18,52 @@ pintos/src/vm/swap.* <br>
 
 <br>
 
-## To-do - Demand paging
-- **Define virtual memory entry structure.** (vm/page.\*) <br>
-     : contain the page table index and page offset. <br>
+## To-do - Swap In/Out
+- **Add page struct.** (vm/page.\*) <br>
+     : structure indicating one physical page allocated to a user. <br>
      
-- **Add vm_init().** (vm/page.\*) <br>
-     : initialize hash table. <br>  
+- **Add lru_list_init().** (vm/frame.\*) <br>
+     : initialize lru list. <br>  
 
-- **Add vm_hash_func().** (vm/page.\*) <br>
-     : return a hash value. <br>  
+- **Add add_page_to_lru_list().** (vm/frame.\*) <br>
+     : add user page at the end of the lru list. <br>  
 
-- **Add vm_less_func().** (vm/page.\*) <br>
-     : Compare the vaddr of the two hash_em entered and return true and false. <br>  
+- **Add del_page_from_lru_list().** (vm/frame.\*) <br>
+     : delete user page from the lru list. <br>  
 
-- **Add insert_vme().** (vm/page.\*) <br>
-     : Insert vm_entry into hash table. <br>  
+- **Add struct page \*alloc_page().** (vm/page.\*) <br>
+     : allocate page. <br>  
 
-- **Add delete_vme().** (vm/page.\*) <br>
-     : Remove vm_entry from hash table. <br> 
+- **Add free_page().** (vm/page.\*) <br>
+     : call \_\_free_page(). <br> 
 
-- **Add find_vme().** (vm/page.\*) <br>
-     : Search and return vm_entry corresponding to vaddr entered as a factor. <br>
+- **Add __free_page.** (vm/page.\*) <br>
+     : eliminate lru list & deallocate memory space allocated to the page structure. <br>
 
-- **Add vm_destroy().** (vm/page.\*) <br>
-     : Remove the bucket list and vm_entry from the hash table. <br>
+- **Add get_next_lru_clock().** (vm/frame.\*) <br>
+     : returns the next node in the lru list for traversal in clock algorithm. <br>
 
-- **Add vm hash table structure in thread structure and add code to initialize hash table.** (threads/thread.\*) <br>
+- **Add swap_init()** (vm/swap.\*) <br>
      : initialize hash table when process starts. <br>
- 
-- **Modify process_exit().** (userprog/process.\*) <br>
-     : Add vm_destory() to remove vm_entries at the end of the process. <br>
 
-- **Modify load_segment().** (userprog/procecss.\*) <br>
-     : Adds ability to initialize process virtual memory related data structures. <br>
+- **Add swap_in()** (vm/swap.\*) <br>
+     : copy data stored in swap slot to virtual address kaddr. <br>
 
-- **Modify setup_stack().** (userprog/process.\*) <br>
-     : Create a vm_entry and set the field value of the created vm_entry to initialize and insert into the vm hash table.. <br>
+- **Add swap_out()** (vm/swap.\*) <br>
+     : store the page kaddr is pointing. <br>
+     
+- **Add free_victim_page().** (vm/frame.\*) <br>
+     : free up memory when there is no free physical page using clock algorithm. <br>
 
-- **Add address_check().** (userprog/syscall.\*) <br>
-     : Use vm_entry to perform validation and return vm_entry. <br>
+- **Modify handle_mm_fault().** (userprog/process.\*) <br>
+     : Modify handle_mm_fault() to support swapping. <br>
+
+- **Add alloc_page().** (vm/page.\*) <br>
+     : function to allocate physical address space. <br>
+
+- **Replace allocation and deallocation functions.** <br>
+     : replace palloc_get_page()->alloc_page(). <br>
+       replace palloc_free_page()->free_page(). <br>
      
 - **Add check_buffer().** (userprog/syscall.\*) <br>
      : Check if the address of the buffer in the read() system call is a valid virtual address. <br> 
