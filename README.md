@@ -24,3 +24,86 @@ pintos/src/vm/page.* <br>
      : Remove an entry from the page table. <br>
 - **Modify handle_mm_fault().** (userprog/process.\*) <br>
 - **Modify process_exit().** (userprog/process.\*) <br>
+
+<br>
+<br>
+
+## Project Description
+
+### To-do 1.Define mmap_file structure. (vm/page.\*) <br>
+
+``` C
+code file
+```
+> **Type of vm_entry** <br>
+
+<br>
+
+### To-do 2. Add mmap(). (userprog/syscall.\*) <br>
+
+```C
+void vm_init (struct hash *vm){
+    if (vm != NULL){
+        hash_init(vm, vm_hash_func, vm_less_func, NULL);
+    }
+}
+```
+> **Reasons for using hash** <br>
+> - vm_entries should be managed in a bundle so that they can be navigated.<br>
+
+<br>
+
+### To-do 3. Add do_munmap(). (userprog/process.\*) <br>
+
+```C
+void vm_init (struct hash *vm){
+    if (vm != NULL){
+        hash_init(vm, vm_hash_func, vm_less_func, NULL);
+    }
+}
+```
+> **Reasons for using hash** <br>
+> - vm_entries should be managed in a bundle so that they can be navigated.<br>
+
+
+<br>
+
+### To-do 4. Add munmap(). (userprog/syscall.\*) <br>
+
+```C
+void vm_init (struct hash *vm){
+    if (vm != NULL){
+        hash_init(vm, vm_hash_func, vm_less_func, NULL);
+    }
+}
+```
+> **Reasons for using hash** <br>
+> - vm_entries should be managed in a bundle so that they can be navigated.<br>
+
+<br>
+
+### To-do 5. Modify handle_mm_fault(). (userprog/process.\*) <br>
+
+```C
+void vm_init (struct hash *vm){
+    if (vm != NULL){
+        hash_init(vm, vm_hash_func, vm_less_func, NULL);
+    }
+}
+```
+> **Reasons for using hash** <br>
+> - vm_entries should be managed in a bundle so that they can be navigated.<br>
+
+<br>
+
+### To-do 5. Modify process_exit(). (userprog/process.\*) <br>
+
+```C
+void vm_init (struct hash *vm){
+    if (vm != NULL){
+        hash_init(vm, vm_hash_func, vm_less_func, NULL);
+    }
+}
+```
+> **Reasons for using hash** <br>
+> - vm_entries should be managed in a bundle so that they can be navigated.<br>
