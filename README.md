@@ -100,13 +100,17 @@ void vm_init (struct hash *vm){
 
 ```C
 void process_exit (void){
-     '''
+     ...
      int mapid;
      for (mapid = 1; mapid < cur->next_mapid; mapid++){
           do_munmap(mapid);
      }
-     '''
+     ...
 }
 ```
-> **Reasons for using hash** <br>
-> - vm_entries should be managed in a bundle so that they can be navigated.<br>
+> - Clean up and deallocate all vm entries when a process exits. <br>
+>   - for(mapid = 1; mapid < cur->next_mapid; mapid++)
+>     : to handle all the memory mappings created by the process
+>   - do_munmap()
+>     : responsible for unmapping a memory mapping associated with the given mapid.
+>       performs necessary cleanup and deallocation of resources associated with the mapping.
