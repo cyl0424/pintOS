@@ -327,265 +327,100 @@ size_t swap_out(void *kaddr){
 
 <br>
 
-### To-do 11. Modify load_segment(). (userprog/procecss.\*) <br>
-```C
-static bool
-load_segment (struct file *file, off_t ofs, uint8_t *upage,
-              uint32_t read_bytes, uint32_t zero_bytes, bool writable) 
-{
-
-...
-
-  file_seek (file, ofs);
-  while (read_bytes > 0 || zero_bytes > 0) 
-    {
-      /* Calculate how to fill this page.
-         We will read PAGE_READ_BYTES bytes from FILE
-         and zero the final PAGE_ZERO_BYTES bytes. */
-      size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
-      size_t page_zero_bytes = PGSIZE - page_read_bytes;
-
-      struct vm_entry *vm_ent = (struct vm_entry *)malloc(sizeof(struct vm_entry));
-      if (vm_ent == NULL){
-        return false;
-      }
-
-      vm_ent -> type = VM_BIN;
-      vm_ent -> vaddr = upage;
-      vm_ent -> writable = writable;
-      vm_ent -> file = file;
-      vm_ent -> offset = ofs;
-      vm_ent -> read_bytes = read_bytes;
-      vm_ent -> zero_bytes = zero_bytes;
-
-      insert_vme(&thread_current()->vm, vm_ent);
-
-      read_bytes -= page_read_bytes;
-      zero_bytes -= page_zero_bytes;
-      ofs += page_read_bytes;
-      upage += PGSIZE;
-    }
-  return true;
-}
-```
-> **load_segment(){ }**<br>
-> - The load_segment() function reads the data and code segments and the setup_stack() function assigns a physical page to the stack.<br>
-> - Raising all segments of a disk image causes waste of physical memory, so in the process of initializing the virtual address space of the modified pintos, instead of allocating physical memory, only information to be loaded through vm_entry per virtual page.<br>
-
-> Remove the part that mounts memory in the process virtual address space<br>
-
-> **struct vm_entry \*vm_ent = (struct vm_entry \*)malloc(sizeof(struct vm_entry))**<br>
-> - Create a vm_entry using the malloc function that allocates memory.<br>
-
-> Add allocation of vm_entry structure, field value initialization, and hash table insertion using insert_vme().<br>
-
-<br>
-
-### To-do 12. Modify setup_stack(). (userprog/process.\*) <br>
-```C
-static bool
-setup_stack (void **esp) 
-{
-
-...
-  if (kpage != NULL) 
-    {
-
-          memset (vm_ent, 0, sizeof(struct vm_entry));
-          vm_ent -> type = VM_ANON;
-          vm_ent -> writable = true;
-          vm_ent -> is_loaded = true;
-          vm_ent -> vaddr = ((uint8_t *) PHYS_BASE) - PGSIZE;
-
-          insert_vme(&thread_current()->vm, kpage->vme);
-      }
-...
-}
-```
-> **setup_stack(){ }**<br>
-> - The existing setup_stack() function that initializes the stack allocates a single page, sets the page table, and sets the stack pointer (esp).<br>
-> - The setup_stack() function creates a vm_entry of a 4kb stack, initializes the field value of the created vm_entry, and modifies it to insert into the vm hash table.<br>
-
-<br>
-
-### To-do 13. Add address_check(). (userprog/syscall.\*) <br>
-
-```C
-static struct vm_entry
-*address_check (void *addr, void *esp)
-{
-  if (!(is_user_vaddr (addr)) || addr <= (void *)0x08048000UL){
-    exit (-1);
-  }
-
-  if (!find_vme (addr))
-    {   
-      exit(-1);
-    }
-  return find_vme(addr);
-}
-```
-> **Verify the validity of a user-provided pointer** <br>
-> - **check if call is_user_vaddr(addr) is False** <br>
->   - addr == NULL : <br>
->   - is_user_vaddr(addr) : check if <br>
-
-> - Use vm_entry to perform validation operations and modify them to return vm_entry.<br>
-
-> **find_vme(addr)**<br>  
-> - return the address using find_vme().<br>
-
-<br>
-
-### To-do 14. Add check_buffer(). (userprog/syscall.\*) <br>
-```C
-static void
-*check_buffer (void *buf, unsigned size, void *esp)
-{
-  int i;
-  for (i=buf; i <= buf + size; i++){
-    struct vm_entry *vme;
-    vme = address_check(buf, esp);
-    if (vme == NULL){
-      exit(-1);
-    }
-    if (vme->writable != true){
-      exit(-1);
-    }
-  }
-}
-```
->**for (i=buf\; i <= buf + size\; i++){ }**<br>
-> - It applies to vm_entries included in addresses up to buffer + size.<br>
-
-> **vme = address_check(buf, esp);**<br>
-> - The check_valid_buffer() function checks the user area of the address through the check_address() function and receives the vm_entry structure because the size from buffer to buffer + size entered as a factor may exceed the size of a page.<br>
-
-> **if (vme->writable != true){ }**<br>
-> - Checks whether vm_entry exists for that address and if the writable member of the vm_entry is true.<br>
-
-<br>
-
-### To-do 15. Modify syscall_handler(). (userprog/syscall.\*) <br>
-```C
-static void
-syscall_handler (struct intr_frame *f)
-{
-  uint32_t *esp;
-  esp = f->esp;
-  if (!is_valid_ptr (esp) || !is_valid_ptr (esp + 1) ||
-      !is_valid_ptr (esp + 2) || !is_valid_ptr (esp + 3))
-    {
-      exit (-1);
-    }
-  else
-    {
-      int syscall_number = *esp;
-      switch (syscall_number)
-        {
-        case SYS_HALT:
-          halt ();
-          break;
-        case SYS_EXIT:
-          address_check(esp + 1, esp);
-          exit (*(esp + 1));
-          break;
-        case SYS_EXEC:
-          address_check(esp + 1, esp);
-          f->eax = exec ((char *) *(esp + 1));
-          break;
-        case SYS_WAIT:
-          address_check(esp + 1, esp);
-          f->eax = wait (*(esp + 1));
-          break;
-        case SYS_CREATE:
-          address_check(esp + 1, esp);
-          address_check(esp + 2, esp);
-          f->eax = create ((char *) *(esp + 1), *(esp + 2));
-          break;
-        case SYS_REMOVE:
-          address_check(esp + 1, esp);
-          f->eax = remove ((char *) *(esp + 1));
-          break;
-        case SYS_OPEN:
-          address_check(esp + 1, esp);
-          f->eax = open ((char *) *(esp + 1));
-          break;
-        case SYS_FILESIZE:
-          address_check(esp + 1, esp);
-	        f->eax = filesize (*(esp + 1));
-	        break;
-        case SYS_READ:
-          address_check(esp + 1, esp);
-          address_check(esp + 2, esp);
-          address_check(esp + 3, esp);
-          check_buffer((void *) *(esp + 2), *(esp + 3), esp);
-          f->eax = read (*(esp + 1), (void *) *(esp + 2), *(esp + 3));
-          break;
-        case SYS_WRITE:
-          address_check(esp + 1, esp);
-          address_check(esp + 2, esp);
-          address_check(esp + 3, esp);
-          check_buffer((void *) *(esp + 2), *(esp + 3), esp);
-          f->eax = write (*(esp + 1), (void *) *(esp + 2), *(esp + 3));
-          break;
-        case SYS_SEEK:
-          address_check(esp + 1, esp);
-          address_check(esp + 2, esp);
-          seek (*(esp + 1), *(esp + 2));
-          break;
-        case SYS_TELL:
-          address_check(esp + 1, esp);
-          f->eax = tell (*(esp + 1));
-          break;
-        case SYS_CLOSE:
-          address_check(esp + 1, esp);
-          close (*(esp + 1));
-          break;
-        case SYS_MMAP:
-          address_check(esp + 1, esp);
-          address_check(esp + 2, esp);
-          f->eax = mmap(*(esp + 1), (void *) *(esp + 2));
-          break;
-        case SYS_MUNMAP:
-          address_check(esp + 1, esp);
-          munmap(*(esp + 1));
-          break;
-        default:
-          break;
-        }
-    }
-}
-```
-> Add address_check() and check_buffer approprietly before calling system call.<br>
-
-<br>
-
 ### To-do 11. Add free_victim_page(). (vm/page.\*) <br>
 ```C
-bool load_file (void *kaddr, struct vm_entry *vm_entry){
-    if (kaddr == NULL || vm_entry == NULL || vm_entry -> type == VM_ANON){
-        return false;
+void free_victim_page(enum palloc_flags flag){
+    struct page *page;
+    struct page *victim;
+
+    if(list_empty(&lru_list)){
+        lru_clock = NULL;
     }
-    if (file_read_at(vm_entry->file, kaddr, vm_entry->read_bytes, vm_entry->offset) != (int) vm_entry->read_bytes){
-        return false;
+    else if(lru_clock==NULL || lru_clock==list_end(&lru_list)){
+        lru_clock = list_begin(&lru_list);
+    }else if (list_next(lru_clock)==list_end(&lru_list)){
+        list_begin(&lru_list);
+    }    
+    else{
+        lru_clock = list_next(lru_clock);
     }
 
-    memset(kaddr + (vm_entry->read_bytes), 0, vm_entry->zero_bytes);
-    return true;
+    page = list_entry(lru_clock, struct page, lru);
+
+    while(page->vme->pinned_flag || pagedir_is_accessed(page->t->pagedir, page->vme->vaddr)){
+        pagedir_is_accessed(page->t->pagedir, page->vme->vaddr);
+        if(list_empty(&lru_list)){
+        lru_clock = NULL;
+        }
+        else if(lru_clock==NULL || lru_clock==list_end(&lru_list)){
+            lru_clock = list_begin(&lru_list);
+        }else{
+            lru_clock = list_next(lru_clock);
+        }
+
+        page = list_entry(lru_clock, struct page, lru);
+    }
+
+    victim = page;
+    uint32_t victim_pgd = victim->t->pagedir;
+    struct vm_entry *victim_vaddr = victim->vme->vaddr;
+
+    switch (victim
+    ->vme->type)
+    {
+    case VM_BIN:
+        if(pagedir_is_dirty(victim_pgd, victim_vaddr)){
+            victim->vme->swap_slot = swap_out(victim->kaddr);
+            victim->vme->type = VM_ANON;
+        }
+        break;
+    case VM_FILE:
+        if(pagedir_is_dirty(victim_pgd, victim_vaddr)){
+            file_write_at(victim->vme->file, victim->vme->vaddr, victim->vme->read_bytes, victim->vme->offset);
+        }
+        break;
+    case VM_ANON:
+        victim->vme->swap_slot = swap_out(victim->kaddr);
+        break;
+    default:
+        break;
+    }
+    victim->vme->is_loaded = false;
+    __free_page(victim);
 }
 ```
-> **load_file (void \*kaddr, struct vm_entry \*vm_entry){ }**<br>
-> - load_file() is a function that loads pages existing on disk into physical memory.<br>
+> **Check conditions:**<br>
+> - if(list_empty(&lru_list)):<br>
+>   lru_clock is set to null<br>
+> - else if(lru_clock==NULL || lru_clock==list_end(&lru_list)):<br>
+>   reset to the beginning of the list<br>
+> - else if (list_next(lru_clock)==list_end(&lru_list)):<br>
+>   reset to the beginning of the list<br>
+> - else:<br>
+>   moved to the next position<br>
 
-> **if (file_read_at(vm_entry->file, kaddr, vm_entry->read_bytes, vm_entry->offset) != (int) vm_entry->read_bytes){ }**<br>
-> - It is necessary to implement a function that reads one page as kaddr as a file and offset in vme.<br>
-> - Use the file_read_at() function or the file_read() + file_seek() function to read a file entered as a factor.<br>
+> **page = list_entry(lru_clock, struct page, lru)**<br>
+> - page pointer is assigned the value of the current page indicated by lru_clock<br>
 
-> **memset(kaddr + (vm_entry->read_bytes), 0, vm_entry->zero_bytes)**<br>
-> - If file couldn't be writed all 4KB, fill the rest with zero.<br>
+> **while(page->vme->pinned_flag || pagedir_is_accessed(page->t->pagedir, page->vme->vaddr))**<br>
+>   :enters a loop that continues until a non-pinned and non-accessed page is found
+>   - If a page is pinned or has been accessed, the clock hand is moved to the next position in the LRU list and the page pointer is updated accordingly.<br>
+>   - Once a victim page is selected, its address is stored in the victim pointer, and its associated page directory and virtual address are stored in victim_pgd and victim_vaddr, respectively.<br>
 
+> **switch (victim->vme->type)**<br>
+>   :to handle different types of virtual memory entries (vm_entry) associated with the victim page. Depending on the type, different eviction operations are performed
+>   - VM_BIN
+>     : if the page has been modified (dirty), it is swapped out to a swap slot using swap_out, and the vm_entry type is changed to VM_ANON.<br>
+>   - VM_FILE
+>     : if the page has been modified (dirty), its content is written back to the file using file_write_at.<br>
+>   - VM_ANON
+>     :  the page is swapped out to a swap slot using swap_out.
 
+>**victim->vme->is_loaded = false**<br>
+>  :the page is no longer in memory
+
+>**Call __free_page(victim)**<br>
+>  :the victim page is freed using the \_\_free_page function<br>
 <br>
 
 ### To-do 12. Replace allocation and deallocation functions. <br>
