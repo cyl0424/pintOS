@@ -49,7 +49,7 @@ pintos/src/vm/swap.* <br>
 - **Add swap_out()** (vm/swap.\*) <br>
      : store the page kaddr is pointing. <br>
      
-- **Add free_victim_page().** (vm/page.\*) <br>
+- **Add free_victim_page().** (vm/frame.\*) <br>
      : free up memory when there is no free physical page using clock algorithm. <br>
 
 - **Replace allocation and deallocation functions.** <br>
@@ -186,7 +186,43 @@ struct page *alloc_page (enum palloc_flags flag){
 
 <br>
 
-### To-do 6. __free_page(). (vm/page.\*) <br>
+### To-do 6. free_page(). (vm/page.\*) <br>
+```C
+void free_page (void *kaddr){
+    struct list_elem *e;
+    struct page *page;
+    bool find = false;
+
+    lock_acquire(&lru_list_lock);
+    for(e = list_begin(&lru_list); e != list_end(&lru_list); e = list_next(e)){
+        page = list_entry(e, struct page, lru);
+        if(page->kaddr == kaddr){
+            find = true;
+            break;
+        }
+    }
+    if (find == true && page!= NULL){
+        __free_page(page);
+    }
+
+    lock_release(&lru_list_lock);
+}
+```
+
+> **The function frees a page of memory associated with the given kernel virtual address (kaddr).** <br>
+> 1. It declares variables, including a list element pointer e, a page pointer page, and a boolean variable find to track if the page is found in the LRU list.
+>
+> 2. It acquires the lru_list_lock to ensure exclusive access to the LRU list.
+>
+> 3. It iterates through the LRU list using a for loop, checking each page's kernel virtual address (page->kaddr) against the provided kaddr. If a matching page is found, it sets find to true, breaks out of the loop, and stores the found page in the page variable.
+>
+> 4. If a matching page is found (find == true) and the page is not NULL, it proceeds to free the page by calling \_\_free_page(page). This step releases the memory occupied by the page, removes it from the LRU list, and performs other cleanup operations.
+>
+> 5. It releases the lru_list_lock to allow other threads to access the LRU list.
+
+<br>
+
+### To-do 7. \_\_free_page(). (vm/page.\*) <br>
 ```C
 void __free_page (struct page *p){
     del_page_from_lru_list(p);
@@ -207,7 +243,7 @@ void __free_page (struct page *p){
 
 <br>
 
-### To-do 7. Add swap_init(). (vm/swap.\*) <br>
+### To-do 8. Add swap_init(). (vm/swap.\*) <br>
 ```C
 struct lock swap_lock;
 struct bitmap *swap_bitmap;
@@ -225,7 +261,7 @@ void swap_init(size_t size){
 <br>
 
 
-### To-do 8. Add swap_in(). (vm/swap.\*) <br>
+### To-do 9. Add swap_in(). (vm/swap.\*) <br>
 ```C
 void swap_in(size_t index, void *kaddr){
     lock_acquire(&swap_lock);
@@ -255,7 +291,7 @@ void swap_in(size_t index, void *kaddr){
 
 <br>
 
-### To-do 9. Add swap_out(). (vm/swap.\*) <br>
+### To-do 10. Add swap_out(). (vm/swap.\*) <br>
 ```C
 size_t swap_out(void *kaddr){
     lock_acquire(&swap_lock);
@@ -288,22 +324,6 @@ size_t swap_out(void *kaddr){
 > b. It sets the bit for the swap_index in the swap_bitmap, indicating that the swap slot is now occupied.
 >
 > 5. Finally, it releases the swap_lock, allowing other threads to access the swap space, and returns the swap_index.
-
-<br>
-
-### To-do 10. Modify process_exit(). (userprog/process.\*) <br>
-```C
-void
-process_exit (void)
-{
-...
-
-  vm_destroy(&cur->vm);
-
-...
-}
-```
-> - Use the hash_destroy() function to remove bucket lists and vm_entries from the hash table.<br>
 
 <br>
 
