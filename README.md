@@ -108,9 +108,9 @@ void process_exit (void){
      ...
 }
 ```
-> - Clean up and deallocate all vm entries when a process exits. <br>
->   - for(mapid = 1; mapid < cur->next_mapid; mapid++)
->     : to handle all the memory mappings created by the process
->   - do_munmap()
->     : responsible for unmapping a memory mapping associated with the given mapid.
->       performs necessary cleanup and deallocation of resources associated with the mapping.
+> **Clean up and deallocate all vm entries when a process exits** <br>
+>   - for(mapid = 1; mapid < cur->next_mapid; mapid++) <br>
+>     : to handle all the memory mappings created by the process <br>
+>   - do_munmap() <br>
+>     : responsible for unmapping a memory mapping associated with the given mapid. <br>
+>       performs necessary cleanup and deallocation of resources associated with the mapping. <br>
