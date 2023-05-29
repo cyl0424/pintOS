@@ -617,43 +617,144 @@ bool handle_mm_fault(struct vm_entry *vme){
 > - to complete loading in physical memory, the virtual address and physical address are mapped to a page table.<br>
 
 <br>
-
-### To-do 18. Modify page_fault(). (userprog/exeption.\*) <br>
+### To-do 13. Replace allocation and deallocation functions <br>
 ```C
-static void
-page_fault (struct intr_frame *f) 
+static bool
+setup_stack (void **esp) 
 {
+  struct page *kpage;
+  bool success = false;
 
- ...
- 
-  struct vm_entry *vme;
-  if (not_present != true){
-    exit(-1);
+  struct vm_entry *vm_ent;
+  vm_ent = (struct vm_entry *)malloc(sizeof(struct vm_entry));
+  if (vm_ent == NULL){
+    return success;
   }
-  vme = find_vme(fault_addr);
-  if (vme == NULL){
-    if (!verify_stack((int32_t) fault_addr, f->esp)){
-      exit(-1);
+  
+  kpage = alloc_page(PAL_USER | PAL_ZERO);
+  if (kpage != NULL) 
+    {
+      kpage->vme = vm_ent;
+      add_page_to_lru_list(kpage);
+
+      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage->kaddr, true);
+
+      if (success){
+        *esp = PHYS_BASE;
+
+          memset (vm_ent, 0, sizeof(struct vm_entry));
+          vm_ent -> type = VM_ANON;
+          vm_ent -> writable = true;
+          vm_ent -> is_loaded = true;
+          vm_ent -> vaddr = ((uint8_t *) PHYS_BASE) - PGSIZE;
+
+          insert_vme(&thread_current()->vm, kpage->vme);
+      }
+      else
+        free_page (kpage->kaddr);
+        free(vm_ent);
     }
-    expand_stack(fault_addr);
-    return ;
-  }
-  if (!handle_mm_fault(vme)){
-    exit(-1);
+
+  return success;
+}
+```
+```C
+void do_munmap(int mapid){
+  struct list_elem *e;
+  struct list_elem *e2;
+  struct list_elem *next_e2;
+
+  for (e = list_begin(&thread_current()->mmap_list); e != list_end(&thread_current()->mmap_list); e = list_next(e)) {
+    struct mmap_file *f = list_entry(e, struct mmap_file, elem);
+    if (f->mapid == mapid){
+
+      for (e2 = list_begin(&f->vme_list); e2 != list_end(&f->vme_list);) {
+        struct thread *cur = thread_current();
+        struct vm_entry *vme = list_entry(e2, struct vm_entry, mmap_elem);
+
+        if (vme->is_loaded && pagedir_is_dirty(&cur->pagedir, vme->vaddr)) {
+          file_write_at(vme->file, vme->vaddr, vme->read_bytes, vme->offset);
+          free_page(vme->vaddr);
+        }
+
+        vme->is_loaded = false;
+        e2 = list_remove(e2);
+        delete_vme(&cur->vm, vme);
+      }
+
+      list_remove(&f->elem);
+      free(f);
+
+    }
+    
   }
 }
-
-...
-
 ```
-> **page_fault (struct intr_frame \*f) { }**<br>
-> - The existing page_fault() process unconditionally generates a "segmentation fault" when an error occurs after permission and address validation, and kills(-1) to terminate it.<br>
-> - Delete the command to kill(-1) to terminate.<br>
+```C
+bool handle_mm_fault(struct vm_entry *vme){
+  struct page *pg;
+  pg = alloc_page(PAL_USER);
+  if(pg == NULL ||vme == NULL){
+    return;
+  }
+  pg->vme = vme;
 
-> **if (!verify_stack((int32_t) fault_addr, f->esp)) { }**<br>
-> - validate fault_addr using verify_stack().
+  bool success;
 
-> **if (!handle_mm_fault(vme)) { }**<br>
-> - Calls the page fault handler function handle_mm_fault().<br>
+  switch (vme->type){
+    case VM_BIN:
+      success = load_file(pg->kaddr, vme);
+      if(!success){
+        free_page(pg->kaddr);
+        return false;
+      }
+      break;
+    case VM_FILE:
+      success = load_file(pg->kaddr, vme);
+      if(!success){
+        free_page(pg->kaddr);
+        return false;
+      }
+          
+    case VM_ANON:
+      swap_in(vme->swap_slot, pg->kaddr);
+      break;
+  }
+
+  if(!install_page (vme->vaddr, pg->kaddr, vme->writable)){
+    free_page(pg->kaddr);
+    return false;
+  }
+  vme->is_loaded = true;
+  add_page_to_lru_list(pg);
+
+  return true;
+  
+}
+```
+> **setup_stack()**<br>
+> - replace palloc_get_page() with alloc_page(). <br>
+> - replace palloc_free_page() with free_page(). <br>
+> **do_munmap()**<br>
+> - replace palloc_get_page() with alloc_page(). <br>
+> - replace palloc_free_page() with free_page(). <br>
+> **handle_mm_fault()**<br>
+> - replace palloc_get_page() with alloc_page(). <br>
+> - replace palloc_free_page() with free_page(). <br>
+<br>
+
+### To-do 14. Modify handle_mm_fault(). (userprog/process.\*)
+```C
+bool handle_mm_fault(struct vm_entry *vme){ 
+...
+  case VM_ANON:
+      swap_in(vme->swap_slot, pg->kaddr);
+      break;
+...
+}
+```
+> **Modify handle_mm_fault() to support swapping**<br>
+> - swap_in(vme->swap_slot, pg->kaddr)<br>
+>   : If a vm entry's type is VM_ANON, call swap_in(). <br>
 
 <br>
