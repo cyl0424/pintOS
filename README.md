@@ -31,8 +31,8 @@ pintos/src/vm/swap.* <br>
 - **Add del_page_from_lru_list().** (vm/frame.\*) <br>
      : delete user page from the lru list. <br>  
 
-- **Add struct page \*alloc_page().** (vm/page.\*) <br>
-     : allocate page. <br>  
+- **Add alloc_page().** (vm/page.\*) <br>
+     : function to allocate physical address space. <br>
 
 - **Add free_page().** (vm/page.\*) <br>
      : call \_\_free_page(). <br> 
@@ -51,9 +51,6 @@ pintos/src/vm/swap.* <br>
      
 - **Add free_victim_page().** (vm/frame.\*) <br>
      : free up memory when there is no free physical page using clock algorithm. <br>
-     
-- **Add alloc_page().** (vm/page.\*) <br>
-     : function to allocate physical address space. <br>
 
 - **Replace allocation and deallocation functions.** <br>
      : replace palloc_get_page()->alloc_page(). <br>
