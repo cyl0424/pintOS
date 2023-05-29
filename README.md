@@ -54,34 +54,17 @@ pintos/src/vm/swap.* <br>
      
 - **Add free_victim_page().** (vm/frame.\*) <br>
      : free up memory when there is no free physical page using clock algorithm. <br>
-
-- **Modify handle_mm_fault().** (userprog/process.\*) <br>
-     : Modify handle_mm_fault() to support swapping. <br>
-
+     
 - **Add alloc_page().** (vm/page.\*) <br>
      : function to allocate physical address space. <br>
 
 - **Replace allocation and deallocation functions.** <br>
      : replace palloc_get_page()->alloc_page(). <br>
        replace palloc_free_page()->free_page(). <br>
-     
-- **Add check_buffer().** (userprog/syscall.\*) <br>
-     : Check if the address of the buffer in the read() system call is a valid virtual address. <br> 
 
-- **Modify syscall_handler().** (userprog/syscall.\*) <br>
-     : Add check_buffer() to validate with or without buffers. <br>  
+- **Modify handle_mm_fault().** (userprog/process.\*) <br>
+     : Modify handle_mm_fault() to support swapping. <br>
 
-- **Add load_file().** (vm/page.\*) <br>
-     : Load pages that exist on disk into physical memory. <br>
-
-- **Add handle_mm_fault().** (userprog/process.\*) <br>
-     : Assign a physical page when a page fault occurs.<br> 
-     : Load files on disk into physical pages by calling load_file().<br> 
-     : Map virtual and physical addresses to page tables when loading into physical memory is complete. <br>  
-     
-- **Modify page_fault().** (userprog/exeption.\*) <br>
-     : Validates fault_addr and calls handle_mm_fault(). <br>
-       
 <br>
 <br>
 
