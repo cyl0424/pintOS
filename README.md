@@ -40,9 +40,6 @@ pintos/src/vm/swap.* <br>
 - **Add __free_page.** (vm/page.\*) <br>
      : eliminate lru list & deallocate memory space allocated to the page structure. <br>
 
-- **Add get_next_lru_clock().** (vm/frame.\*) <br>
-     : returns the next node in the lru list for traversal in clock algorithm. <br>
-
 - **Add swap_init()** (vm/swap.\*) <br>
      : initialize hash table when process starts. <br>
 
@@ -70,128 +67,82 @@ pintos/src/vm/swap.* <br>
 
 ## Project Description
 
-### To-do 1. Define virtual memory entry structure. (vm/page.\*) <br>
+### To-do 1. Add page struct. (vm/page.h) <br>
 
 ``` C
-enum vm_type {
-    VM_ANON,
-    VM_FILE,
-    VM_BIN
-};
-
-struct vm_entry {
-    uint8_t type;
-    void *vaddr;
-    bool writable;
-    bool is_loaded;
-    bool pinned_flag;
-    struct file *file;
-    struct list_elem mmap_elem;
-    size_t offset;
-    size_t read_bytes;
-    size_t zero_bytes;
-    size_t swap_slot;
-    struct hash_elem elem;
+struct page {
+    void *kaddr;
+    struct vm_entry *vme;
+    struct thread *t;
+    struct list_elem lru;
 };
 ```
-> **Type of vm_entry** <br>
-> - **VM_BIN** <br>
->   Loads data from binary files. <br>
->  - **VM_FILE** <br>
->   Load data from mapped files. <br>
->  - **VM_ANON** <br>
->   Load data from swap area. <br>
+> **void \*kaddr:** This is a pointer to the kernel virtual address associated with the page. It points to the starting address of the page in the kernel's virtual memory space.
+>
+> **struct vm_entry \*vme:** This is a pointer to the corresponding virtual memory entry (VME) for the page. It represents the mapping and properties of the page within the virtual memory space of a specific process.
+>
+> **struct thread \*t:** This is a pointer to the thread that owns or is associated with the page. It represents the thread of execution within the operating system.
+>
+> **struct list_elem lru:** This is a list element used to link the page into an LRU (Least Recently Used) list. It allows the page to be efficiently tracked and ordered based on its usage in memory management algorithms.
 
->  **Structure of vm_entry** <br>
-> - **uint8_t type** <br>
->    Type that distinguishes VM_BIN, VM_FILE, and VM_ANON
-> - **void *vaddr** <br>
->    virtual page number
-> - **bool writable** <br>
->    indicate whether the address is writable
-> - **bool is_loaded** <br>
->    indicate whether physical memory is loaded
-> - **bool pinned_flag** <br>
->    Type that distinguishes VM_BIN, VM_FILE, and VM_ANON
-> - **struct file \*file** <br>
->    indicate which is a file mapped to a virtual address
-> - **struct list_elem mmap_elem** <br>
->    the element of the mmap list
-> - **size_t offset** <br>
->    offset of the file to be read
-> - **size_t read_bytes** <br>
->    the data size written on the virtual page
-> - **size_t zero_bytes** <br>
->    the bytes of the remaining page to be filled with 0
-> - **size_t swap_slot** <br>
->    swap slot    
-> - **struct hash_elem elem** <br>
->    hash table element                     
-    
 <br>
 
-### To-do 2. Add vm_init(). (vm/page.\*) <br>
+### To-do 2. Add lru_list_init(). (vm/frame.\*) <br>
 
 ```C
-void vm_init (struct hash *vm){
-    if (vm != NULL){
-        hash_init(vm, vm_hash_func, vm_less_func, NULL);
-    }
+void lru_list_init(void){
+    list_init(&lru_list);
+    lock_init(&lru_list_lock);
+    lru_clock = NULL;
 }
 ```
-> **Reasons for using hash** <br>
-> - vm_entries should be managed in a bundle so that they can be navigated.<br>
-> - Therefore, vm_entry is managed with a hash with fast navigation and hash values are extracted with vaddr.<br>
-
-> **hash_init(vm, vm_hash_func, vm_less_func, NULL)** <br>
-> - Initializes the hash table. <br>
+> **The function initializes the LRU (Least Recently Used) list.**<br>
+> 1. It initializes an empty linked list called lru_list using the list_init function. This list is used to maintain the order of pages based on their usage.
+>
+> 2. It initializes a lock called lru_list_lock using the lock_init function. This lock is used to synchronize access to the LRU list.
+> 
+> 3. It sets the lru_clock pointer to NULL. This pointer is used as a reference to the current position in the LRU list during clock sweep algorithms.
 
 <br>
 
-### To-do 3. Add vm_hash_func(). (vm/page.\*) <br>
+
+### To-do 3. Add add_page_to_lru_list(). (vm/frame.\*) <br>
 ```C
-unsigned vm_hash_func (const struct hash_elem *e, void *aux){
-    unsigned int res;
-    if (e != NULL){
-        int hash_ent = hash_entry(e, struct vm_entry, elem) ->vaddr;
-        res = hash_int(hash_ent);
-        return res;
-    }
-    return NULL;
+void add_page_to_lru_list(struct page *page){
+    lock_acquire(&lru_list_lock);
+    list_push_back(&lru_list, &page->lru);
+    lock_release(&lru_list_lock);
 }
 ```
-> **if (e != NULL){}** <br>
-> - If the e pointer is not NULL, the code proceeds to extract a field ‘vaddr’ from a structure of type vm_entry using the hash_entry macro.<br>
-> - This macro calculates the starting address of the structure that contains the hash_elem element.<br> 
-> - It assumes that the hash_elem structure is embedded within another structure, in this case, struct vm_entry.<br>
-
-> **int hash_ent = hash_entry(e, struct vm_entry, elem) ->vaddr** <br>
-> - Once the ‘vaddr’ value is obtained, it is passed as an argument to the hash_int function.<br>
-> - It takes an integer value and applies a hashing algorithm to produce a hash value. The resulting hash value ‘res’ is then returned by the function.<br>
+> **The function adds a page to the LRU (Least Recently Used) list.**<br>
+> 1. It acquires the lru_list_lock to ensure exclusive access to the LRU list.
+>
+> 2. It pushes the given page to the back of the lru_list using the list_push_back function. This action inserts the page at the end of the list, indicating that it is the most recently used page.
+>
+> 3. It releases the lru_list_lock to allow other threads to access the LRU list.
 
 <br>
 
-### To-do 4. Add vm_less_func(). (vm/page.\*) <br>
+
+### To-do 4. Add del_page_from_lru_list(). (vm/frame.\*) <br>
 ```C
-bool vm_less_func (const struct hash_elem *e1, const struct hash_elem *e2, void *aux){
-    if (e1 != NULL && e2 != NULL){
-        int e1_entry = hash_entry(e1, struct vm_entry, elem) ->vaddr;
-        int e2_entry = hash_entry(e2, struct vm_entry, elem) ->vaddr;
-        return e1_entry < e2_entry;
+void del_page_from_lru_list (struct page *page){
+    if(&page->lru == lru_clock){
+        lru_clock = list_next(lru_clock);
     }
-    return NULL;
+    list_remove(&page->lru);
 }
 ```
-> **if (e1 != NULL && e2 != NULL){ }** <br>
-> - If both pointers are not NULL, extract the ‘vaddr’ from the struct vm_entry structures associated with each hash_elem using the hash_entry macro.<br>
-
-> **return e1_entry < e2_entry**<br>
-> - Once the ‘vaddr’ values are obtained for both elements, a comparison is performed using the < operator, checking if the ‘vaddr’ of e1 is less than the ‘vaddr’ of e2.<br>
-> - The result of the comparison (true or false) is then returned by the function. If e1 has a lower ‘vaddr’ value than e2, the function returns true, indicating that e1 should be placed before e2 in the hash table. Otherwise, it returns false.<br>
+> **The function removes a page from the LRU (Least Recently Used) list.**<br>
+> 1. It checks if the page's lru pointer is equal to the lru_clock. This comparison is used to determine if the page being removed is currently pointed to by the lru_clock.
+>
+> 2. If the condition is true (i.e., the page being removed is the one pointed to by the lru_clock), the lru_clock is updated to point to the next element in the list using list_next. This step ensures that the lru_clock continues to track the correct position in the LRU list.
+>
+> 3. Regardless of the condition, the function removes the page from the LRU list using list_remove. This action detaches the page from the list without freeing the memory associated with it.
 
 <br>
 
-### To-do 5. Add insert_vme(). (vm/page.\*) <br>
+### To-do 5. Add struct page \*alloc_page(). (vm/page.\*) <br>
 ```C
 bool insert_vme (struct hash *vm, struct vm_entry *vm_entry){
     if(vm != NULL && vm_entry != NULL && pg_ofs(vm_entry->vaddr)==0){
