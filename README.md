@@ -69,7 +69,6 @@ expand_stack (void *addr)
 > 2. It allocates memory for a new vm_entry struct using malloc. If the allocation fails and the vme is NULL, the function returns false.
 >
 > 3. If the page allocation (kpage) is successful, the function proceeds with the following actions:
-
 >   - Associates the vme with the allocated page by assigning it to the kpage->vme field.
 >   - Rounds down the provided addr to the nearest page boundary to obtain the user page address (upage).
 >   - Initializes the vme with relevant information such as the type (VM_ANON), virtual address (upage), writability, and loaded status.
