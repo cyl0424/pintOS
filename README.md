@@ -308,7 +308,7 @@ void vm_destroy (struct hash *vm){
 
 <br>
 
-### To-do 9. Add vm hash table structure in thread structure and add code to initialize hash table. (threads/thread.\* , userprog/process.\*) <br>
+### To-do 9. Add vm hash table structure in thread structure. (threads/thread.\* , userprog/process.\*) <br>
 #### thread.h <br>
 ```C
 struct thread
@@ -321,6 +321,7 @@ struct hash vm;
 }
 ```
 <br>
+> - Add hash struct 'vm' to structure 'thread'.<br>
 
 #### process.c <br>
 
