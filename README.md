@@ -143,7 +143,7 @@ mmap (int fd, void *addr){
 > 12. It adds the `vm_entry` to the `vme_list` of the `mmap_file` struct and inserts it into the virtual memory map of the current thread.
 >
 > 13. It updates the remaining length, address, and offset for the next iteration.
-
+>
 > 14. Once all pages are mapped, it returns the `mapid` associated with the `mmap_file` struct.
 
 
@@ -183,7 +183,7 @@ void do_munmap(int mapid){
   }
 }
 ```
-> **Reasons for using hash** <br>
+> **The function takes an mapid as a parameter and is responsible for unmapping the memory associated with that mapid.** <br>
 > 1. It iterates through the mmap_list of the current thread to find the mmap_file with the matching mapid.
 >
 > 2. If a matching mmap_file is found, it enters a nested loop to iterate through the vme_list of that mmap_file.
