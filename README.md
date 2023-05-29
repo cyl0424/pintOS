@@ -99,10 +99,13 @@ void vm_init (struct hash *vm){
 ### To-do 5. Modify process_exit(). (userprog/process.\*) <br>
 
 ```C
-void vm_init (struct hash *vm){
-    if (vm != NULL){
-        hash_init(vm, vm_hash_func, vm_less_func, NULL);
-    }
+void process_exit (void){
+     '''
+     int mapid;
+     for (mapid = 1; mapid < cur->next_mapid; mapid++){
+          do_munmap(mapid);
+     }
+     '''
 }
 ```
 > **Reasons for using hash** <br>
