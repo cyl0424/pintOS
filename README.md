@@ -379,6 +379,7 @@ setup_stack (void **esp)
 <br>
 
 ### To-do 13. Add address_check(). (userprog/syscall.\*) <br>
+
 ```C
 static struct vm_entry
 *address_check (void *addr, void *esp)
@@ -618,6 +619,7 @@ bool handle_mm_fault(struct vm_entry *vme){
 
 <br>
 ### To-do 13. Replace allocation and deallocation functions. <br>
+
 ```C
 static bool
 setup_stack (void **esp) 
