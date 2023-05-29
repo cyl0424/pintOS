@@ -618,6 +618,7 @@ bool handle_mm_fault(struct vm_entry *vme){
 
 <br>
 ### To-do 13. Replace allocation and deallocation functions <br>
+
 ```C
 static bool
 setup_stack (void **esp) 
@@ -658,6 +659,7 @@ setup_stack (void **esp)
   return success;
 }
 ```
+
 ```C
 void do_munmap(int mapid){
   struct list_elem *e;
@@ -690,6 +692,7 @@ void do_munmap(int mapid){
   }
 }
 ```
+
 ```C
 bool handle_mm_fault(struct vm_entry *vme){
   struct page *pg;
