@@ -617,8 +617,7 @@ bool handle_mm_fault(struct vm_entry *vme){
 > - to complete loading in physical memory, the virtual address and physical address are mapped to a page table.<br>
 
 <br>
-### To-do 13. Replace allocation and deallocation functions <br>
-
+### To-do 13. Replace allocation and deallocation functions. <br>
 ```C
 static bool
 setup_stack (void **esp) 
